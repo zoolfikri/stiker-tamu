@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stiker Tamu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --paper:#FAFAFA; --ink:#18181B; --ink-soft:#71717A; --accent:#3D5AFE; --accent-soft:#6B82FF;
+  --line:#E4E4E7; --panel:#F4F4F5; --panel-2:#ECECEE; --surface:#FFFFFF;
+  --sheet:#ffffff; --sheet-shadow: 0 1px 2px rgba(24,24,27,.05), 0 8px 20px -10px rgba(24,24,27,.18);
+  --danger:#DC2626;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0C0C0E; --ink:#F4F4F5; --ink-soft:#9B9BA3; --accent:#7C8FFF; --accent-soft:#97A6FF;
+    --line:#28282C; --panel:#151517; --panel-2:#1B1B1E; --surface:#19191C;
+    --sheet:#FAFAFA; --sheet-shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 24px -12px rgba(0,0,0,.6);
+    --danger:#F87171;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0C0C0E; --ink:#F4F4F5; --ink-soft:#9B9BA3; --accent:#7C8FFF; --accent-soft:#97A6FF;
+  --line:#28282C; --panel:#151517; --panel-2:#1B1B1E; --surface:#19191C;
+  --sheet:#FAFAFA; --sheet-shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 24px -12px rgba(0,0,0,.6);
+  --danger:#F87171;
+}
+*{box-sizing:border-box;}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  min-height:100vh;
+}
+h1,h2{font-family:'Inter',system-ui,sans-serif; letter-spacing:-.02em;}
+.app{display:flex; min-height:100vh;}
+.rail{
+  width:380px; flex:0 0 380px; background:var(--panel); border-right:1px solid var(--line);
+  padding:28px 24px 40px; overflow-y:auto; max-height:100vh; position:sticky; top:0;
+}
+.brand{display:flex; align-items:center; gap:9px; margin-bottom:4px;}
+.brand h1{font-size:1.25rem; font-weight:700; margin:0; letter-spacing:-.02em;}
+.brand .mark{width:9px; height:9px; border-radius:2.5px; background:var(--accent); flex:0 0 9px;}
+.tagline{color:var(--ink-soft); font-size:.83rem; margin:0 0 26px; line-height:1.5;}
+.section{margin-bottom:26px;}
+.section-title{
+  font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; font-weight:600;
+  color:var(--ink-soft); margin:0 0 12px; display:flex; align-items:center; gap:8px;
+}
+.section-title .n{
+  width:16px; height:16px; border-radius:4px; border:1px solid var(--line); color:var(--ink-soft);
+  display:inline-flex; align-items:center; justify-content:center; font-size:.66rem;
+  font-family:'JetBrains Mono',monospace; flex:0 0 16px;
+}
+.dropzone{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%;
+  border:2px dashed var(--line); border-radius:10px; padding:18px 14px; text-align:center;
+  cursor:pointer; background:var(--surface); transition:border-color .15s, background .15s;
+}
+.dropzone:hover, .dropzone.drag{border-color:var(--accent); background:var(--panel-2);}
+.dropzone input{display:none;}
+.dropzone .ic{font-size:1.4rem; display:block; margin-bottom:6px;}
+.dropzone .t1{display:block; font-size:.85rem; font-weight:600;}
+.dropzone .t2{display:block; font-size:.75rem; color:var(--ink-soft); margin-top:4px;}
+.file-chip{
+  display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--line);
+  border-radius:8px; padding:8px 10px; font-size:.8rem; margin-top:10px;
+}
+.file-chip .fname{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500;}
+.file-chip button{background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:.95rem; padding:2px;}
+.field{margin-bottom:12px;}
+.field label{display:block; font-size:.78rem; font-weight:600; margin-bottom:5px; color:var(--ink);}
+.field .hint{font-size:.72rem; color:var(--ink-soft); margin-top:4px; line-height:1.4;}
+select, input[type=text], input[type=number], textarea{
+  width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:7px;
+  background:var(--surface); color:var(--ink); font-family:inherit; font-size:.85rem;
+}
+select:focus, input:focus, textarea:focus{outline:2px solid var(--accent-soft); outline-offset:-1px;}
+textarea{resize:vertical; min-height:44px;}
+.row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
+.chk{display:flex; align-items:center; gap:8px; font-size:.83rem; margin-bottom:8px; cursor:pointer;}
+.chk input{width:15px; height:15px; accent-color:var(--accent);}
+.stat-row{display:flex; gap:10px; margin-top:4px;}
+.stat{
+  flex:1 1 0; min-width:0; background:var(--surface); border:1px solid var(--line); border-radius:8px;
+  padding:10px 12px;
+}
+.stat .v{font-family:'JetBrains Mono',monospace; font-weight:600; font-size:1.15rem; line-height:1;}
+.stat .l{font-size:.68rem; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em; margin-top:4px;}
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  border:1px solid var(--line); background:var(--surface); color:var(--ink);
+  padding:9px 14px; border-radius:8px; font-size:.85rem; font-weight:600; cursor:pointer;
+  font-family:inherit; transition:border-color .15s, background .15s, transform .1s;
+}
+.btn:hover{border-color:var(--accent-soft);}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:var(--accent); border-color:var(--accent); color:#fff; width:100%; padding:12px 14px; font-size:.92rem;}
+.btn-primary:hover{background:var(--accent-soft); border-color:var(--accent-soft);}
+.btn-ghost{background:none; border:none; color:var(--ink-soft); padding:4px 6px; font-weight:500;}
+.btn-ghost:hover{color:var(--accent);}
+.divider{height:1px; background:var(--line); margin:22px 0;}
+.main{flex:1; padding:32px 40px 80px; overflow-x:auto;}
+.main-head{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:22px; gap:20px; flex-wrap:wrap;}
+.main-head h2{font-size:1.1rem; margin:0 0 4px; font-weight:600;}
+.main-head p{margin:0; color:var(--ink-soft); font-size:.83rem;}
+.guest-table-wrap{
+  background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden;
+  margin-bottom:32px; box-shadow:var(--sheet-shadow);
+}
+.guest-table-scroll{max-height:280px; overflow-y:auto; overflow-x:auto;}
+table.guests{width:100%; min-width:660px; border-collapse:collapse; font-size:.82rem;}
+table.guests thead th{
+  position:sticky; top:0; background:var(--panel); text-align:left; padding:9px 12px;
+  font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft);
+  border-bottom:1px solid var(--line); font-weight:600; z-index:1;
+}
+table.guests td{padding:6px 10px; border-bottom:1px solid var(--line);}
+table.guests tr:last-child td{border-bottom:none;}
+table.guests input{border:1px solid transparent; background:transparent; padding:5px 7px; border-radius:5px; font-size:.82rem; width:100%;}
+table.guests input:hover{border-color:var(--line);}
+table.guests input:focus{border-color:var(--accent-soft); background:var(--surface); outline:none;}
+table.guests td.idx{color:var(--ink-soft); font-family:'JetBrains Mono',monospace; font-size:.75rem; width:36px;}
+table.guests td.act{width:34px; text-align:center;}
+.table-toolbar{display:flex; justify-content:space-between; align-items:center; padding:10px 14px; border-top:1px solid var(--line); background:var(--panel);}
+.table-toolbar .left{font-size:.76rem; color:var(--ink-soft);}
+.empty-state{padding:40px 20px; text-align:center; color:var(--ink-soft); font-size:.85rem;}
+
+.stage{display:flex; flex-direction:column; align-items:center; gap:36px;}
+.sheet{
+  background:var(--sheet); box-shadow:var(--sheet-shadow); position:relative;
+  color:#18181B;
+}
+.sheet .pagelabel{
+  position:absolute; top:-26px; left:0; font-family:'JetBrains Mono',monospace; font-size:.72rem;
+  color:var(--ink-soft);
+}
+.label-grid{position:absolute; display:grid;}
+.sticker{
+  border:1px solid #E4E4E7; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; overflow:hidden; padding:2mm; position:relative;
+}
+.sticker .line1{font-family:'Inter',sans-serif; font-weight:500; opacity:.6;}
+.sticker .line2{font-family:'Inter',sans-serif; font-weight:700; line-height:1.15; letter-spacing:-.01em;}
+.sticker .line3{font-family:'Inter',sans-serif; opacity:.6;}
+.sticker.empty{border-style:dashed; opacity:.3;}
+
+footer.hint-bar{
+  max-width:640px; margin:0 auto; text-align:center; color:var(--ink-soft); font-size:.78rem; line-height:1.6;
+}
+
+@media print{
+  body{background:#fff !important;}
+  .rail, .main-head, .guest-table-wrap, footer.hint-bar, .noprint{display:none !important;}
+  .app{display:block;}
+  .main{padding:0; overflow:visible;}
+  .stage{gap:0; align-items:flex-start;}
+  .sheet{box-shadow:none !important; margin:0 !important; page-break-after:always;}
+  .sheet:last-child{page-break-after:auto;}
+  .sheet .pagelabel{display:none;}
+  .sticker{border-color:transparent !important;}
+}
+
+/* ---------- Responsive: placed last so these reliably win the cascade ---------- */
+@media (max-width: 880px){
+  .app{flex-direction:column;}
+  .rail{
+    width:100%; flex:none; max-height:none; position:static;
+    border-right:none; border-bottom:1px solid var(--line); padding:20px 18px 28px;
+  }
+  .main{padding:24px 18px 60px;}
+  .main-head{align-items:flex-start;}
+}
+@media (max-width: 560px){
+  .row2{grid-template-columns:1fr 1fr; gap:8px;}
+  .stat-row{flex-wrap:wrap; gap:8px;}
+  .stat{flex:1 1 calc(50% - 4px);}
+  .brand h1{font-size:1.1rem;}
+  .main{padding:20px 14px 50px;}
+  .rail{padding:18px 14px 24px;}
+  table.guests{min-width:600px;}
+}
+@media (max-width: 360px){
+  .row2{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+
+<div class="app">
+  <aside class="rail noprint">
+    <div class="brand"><span class="mark"></span><h1>Stiker Tamu</h1></div>
+    <p class="tagline">Impor daftar tamu dari Excel, lalu susun otomatis ke layout kertas stiker — siap cetak dalam ukuran asli.</p>
+
+    <div class="section">
+      <div class="section-title"><span class="n">1</span>Impor Daftar Tamu</div>
+      <label class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+        <span class="t1">Pilih atau seret file Excel/CSV</span>
+        <span class="t2">.xlsx, .xls, atau .csv</span>
+      </label>
+      <div id="fileChip"></div>
+      <div class="field" id="columnMapWrap" style="display:none; margin-top:12px;">
+        <label>Kolom nama tamu</label>
+        <select id="colName"></select>
+        <div class="row2" style="margin-top:10px;">
+          <div>
+            <label style="font-size:.72rem;">Kolom group (opsional)</label>
+            <select id="colGroup"></select>
+          </div>
+          <div>
+            <label style="font-size:.72rem;">Kolom category (opsional)</label>
+            <select id="colCategory"></select>
+          </div>
+        </div>
+        <div class="row2" style="margin-top:10px;">
+          <div>
+            <label style="font-size:.72rem;">Kolom jumlah tamu (opsional)</label>
+            <select id="colCount"></select>
+          </div>
+          <div>
+            <label style="font-size:.72rem;">Kolom session (opsional)</label>
+            <select id="colSession"></select>
+          </div>
+        </div>
+        <div class="hint" style="margin-top:8px;">Kolom di atas mengikuti struktur template impor (name, group, category, guest_count, session). Bila jumlah tamu lebih dari 1, baris keterangan (mis. "beserta keluarga") otomatis ditampilkan untuk tamu itu — atur teksnya di bagian Format Teks Stiker.</div>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn" id="addRowBtn" style="width:100%;">+ Tambah tamu manual</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title"><span class="n">2</span>Format Teks Stiker</div>
+      <div class="chk"><input type="checkbox" id="showPrefix" checked><label for="showPrefix">Tampilkan baris pembuka</label></div>
+      <div class="field" id="prefixField">
+        <input type="text" id="prefixText" value="Kepada Yth.">
+      </div>
+      <div class="field">
+        <label>Gelar (ditambahkan di depan nama semua tamu)</label>
+        <select id="defaultTitle">
+          <option value="" selected>— tanpa gelar —</option>
+          <option value="Bapak/Ibu">Bapak/Ibu</option>
+          <option value="Bapak">Bapak</option>
+          <option value="Ibu">Ibu</option>
+          <option value="Sdr/i.">Sdr/i.</option>
+        </select>
+      </div>
+      <div class="chk"><input type="checkbox" id="showNote"><label for="showNote">Tampilkan baris keterangan</label></div>
+      <div class="field" id="noteField">
+        <input type="text" id="noteDefault" value="beserta keluarga" placeholder="mis. beserta keluarga">
+        <div class="hint">Ditampilkan untuk tamu dengan jumlah lebih dari 1 (dari kolom jumlah tamu). Tamu dengan jumlah 1 atau tanpa data jumlah tidak diberi baris ini.</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title"><span class="n">3</span>Layout Kertas Stiker</div>
+      <div class="field">
+        <label>Preset ukuran</label>
+        <select id="preset">
+          <option value="64x32x3x4" selected>64 × 32 mm — 3×4 (12/lembar) — Tom &amp; Jerry Label No. 103</option>
+          <option value="103.5x37x2x7">103,5 × 37 mm — 2×7 (14/lembar)</option>
+          <option value="105x35x2x8">105 × 35 mm — 2×8 (16/lembar)</option>
+          <option value="105x28.5x2x10">105 × 28,5 mm — 2×10 (20/lembar)</option>
+          <option value="70x42.3x3x7">70 × 42,3 mm — 3×7 (21/lembar)</option>
+          <option value="70x35x3x8">70 × 35 mm — 3×8 (24/lembar)</option>
+          <option value="custom">Ukuran kustom…</option>
+        </select>
+      </div>
+      <div id="customFields" style="display:none;">
+        <div class="row2">
+          <div class="field"><label>Lebar label (mm)</label><input type="number" id="labelW" value="70" step="0.1"></div>
+          <div class="field"><label>Tinggi label (mm)</label><input type="number" id="labelH" value="42.3" step="0.1"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Kolom</label><input type="number" id="cols" value="3" min="1"></div>
+          <div class="field"><label>Baris</label><input type="number" id="rowsN" value="7" min="1"></div>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Jarak horizontal (mm)</label><input type="number" id="gapX" value="0" step="0.1"></div>
+        <div class="field"><label>Jarak vertikal (mm)</label><input type="number" id="gapY" value="0" step="0.1"></div>
+      </div>
+      <div class="field">
+        <label>Ukuran kertas</label>
+        <select id="pageSize">
+          <option value="210x297" selected>A4 (210 × 297 mm)</option>
+          <option value="215.9x330.2">F4 / Folio (215,9 × 330,2 mm)</option>
+          <option value="215.9x279.4">Letter (215,9 × 279,4 mm)</option>
+          <option value="202x138">Lembar Label No. 103 (20,2 × 13,8 cm)</option>
+        </select>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Kalibrasi offset X (mm)</label><input type="number" id="offX" value="0" step="0.1"></div>
+        <div class="field"><label>Kalibrasi offset Y (mm)</label><input type="number" id="offY" value="0" step="0.1"></div>
+      </div>
+      <div class="hint" style="margin-top:-4px; margin-bottom:10px;">Cetak satu lembar percobaan lalu sesuaikan offset bila posisi meleset dari kertas stiker.</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="v" id="statGuests">0</div><div class="l">Tamu</div></div>
+      <div class="stat"><div class="v" id="statPerPage">20</div><div class="l">Per lembar</div></div>
+      <div class="stat"><div class="v" id="statPages">0</div><div class="l">Lembar</div></div>
+    </div>
+
+    <button class="btn btn-primary" id="printBtn" style="margin-top:18px;">Cetak stiker</button>
+    <button class="btn" id="downloadPdfBtn" style="width:100%; margin-top:8px;">Unduh PDF (ukuran presisi)</button>
+    <button class="btn" id="printTestBtn" style="width:100%; margin-top:8px;">Cetak uji coba (nama acak + garis label)</button>
+    <div class="hint" style="margin-top:8px;">Cetak uji coba mengisi satu lembar penuh dengan nama acak dan menampilkan garis tepi tiap label, tanpa mengubah daftar tamu Anda — cocok untuk cek posisi sebelum pakai kertas stiker asli.</div>
+    <div class="hint" style="margin-top:10px;">Tombol Cetak tidak merespons, atau ukuran kertas di dialog cetak tidak sesuai (sering terjadi di HP Android)? Gunakan tombol <strong>Unduh PDF</strong> — ukurannya presisi di perangkat apa pun, lalu cetak file PDF tersebut dari aplikasi/printer Anda.</div>
+  </aside>
+
+  <main class="main">
+    <div class="main-head noprint">
+      <div>
+        <h2>Pratinjau cetak</h2>
+        <p id="scaleInfo">Diskalakan agar muat di layar — proporsi lebar dan tinggi kertas tetap sesuai aslinya.</p>
+      </div>
+      <label class="chk" style="margin:0;"><input type="checkbox" id="trueSize"><span>Tampilkan ukuran asli (100%, sesuai fisik)</span></label>
+    </div>
+
+    <div class="guest-table-wrap noprint">
+      <div class="guest-table-scroll">
+        <table class="guests" id="guestTable">
+          <thead>
+            <tr><th style="width:36px;">#</th><th>Nama</th><th style="width:110px;">Group</th><th style="width:110px;">Category</th><th style="width:60px;">Jml</th><th style="width:100px;">Session</th><th style="width:34px;"></th></tr>
+          </thead>
+          <tbody id="guestTbody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState">Belum ada tamu. Impor file Excel/CSV atau tambahkan tamu manual di atas.</div>
+      </div>
+      <div class="table-toolbar">
+        <span class="left" id="tableCount">0 tamu</span>
+        <div>
+          <button class="btn-ghost" id="clearAllBtn">Hapus semua</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage" id="stage"></div>
+
+    <footer class="hint-bar noprint">Data tamu diproses sepenuhnya di peramban ini — tidak diunggah ke server mana pun.</footer>
+  </main>
+</div>
+
+<script>
+(function(){
+  const MM_PER_PX_SCALE = 3.78; // for on-screen 1mm≈3.78px baseline before stage scaling
+  // Font size as a fraction of label height, shared by the on-screen render and the print CSS
+  // so they can never drift apart. Name line kept modest so it doesn't dominate small labels.
+  const FONT_RATIO = {prefix: 0.13, name: 0.20, note: 0.12};
+  let currentScale = 1; // recomputed each render(), reused by clampFont for consistent sizing
+  let guests = []; // {name, group, category, count, session} — matches the Excel import template's columns
+  let headers = [];
+  let rows = []; // raw parsed rows (array of objects keyed by header)
+  // Some presets (e.g. Tom & Jerry Label No. 103) specify exact, non-centered page
+  // margins from the manufacturer's own template — the label grid is anchored to the
+  // top-left margin, not centered on the sheet. When set, this overrides the
+  // auto-centering math below; cleared whenever the user manually edits a dimension
+  // that would invalidate the official spec (custom offsets via offX/offY still apply
+  // on top of it, for print calibration).
+  let marginOverride = null; // {ml, mt} in mm, or null to auto-center
+
+  const $ = id => document.getElementById(id);
+
+  // guests starts empty — import an Excel/CSV file or add guests manually.
+
+  // ---------- File import ----------
+  const dropzone = $('dropzone'), fileInput = $('fileInput');
+  ['dragover','dragenter'].forEach(ev=>dropzone.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.add('drag');}));
+  ['dragleave','drop'].forEach(ev=>dropzone.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.remove('drag');}));
+  dropzone.addEventListener('drop', e=>{
+    const f = e.dataTransfer.files[0];
+    if(f){ fileInput.files = e.dataTransfer.files; handleFile(f); }
+  });
+  fileInput.addEventListener('change', e=>{
+    const f = e.target.files[0];
+    if(f) handleFile(f);
+  });
+
+  function handleFile(file){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      try{
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, {type:'array'});
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet, {defval:''});
+        if(!json.length){ alert('File tidak berisi baris data.'); return; }
+        headers = Object.keys(json[0]);
+        rows = json;
+        showFileChip(file.name, json.length);
+        populateColumnMap();
+      }catch(err){
+        alert('Gagal membaca file. Pastikan formatnya .xlsx, .xls, atau .csv yang valid.');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function showFileChip(name, count){
+    $('fileChip').innerHTML = `<div class="file-chip"><span class="fname">${escapeHtml(name)} · ${count} baris</span><button id="removeFileBtn" title="Hapus">✕</button></div>`;
+    $('removeFileBtn').addEventListener('click', ()=>{
+      $('fileChip').innerHTML=''; $('columnMapWrap').style.display='none';
+      fileInput.value=''; rows=[]; headers=[];
+    });
+  }
+
+  function populateColumnMap(){
+    $('columnMapWrap').style.display='block';
+    const optsFor = (allowEmpty)=> (allowEmpty?['<option value="">— tidak ada —</option>']:[]).concat(
+      headers.map(h=>`<option value="${escapeHtml(h)}">${escapeHtml(h)}</option>`)
+    ).join('');
+    $('colName').innerHTML = optsFor(false);
+    $('colGroup').innerHTML = optsFor(true);
+    $('colCategory').innerHTML = optsFor(true);
+    $('colCount').innerHTML = optsFor(true);
+    $('colSession').innerHTML = optsFor(true);
+    // best-guess auto selection
+    const guess = (cands)=>{
+      const lower = headers.map(h=>h.toLowerCase());
+      for(const c of cands){ const i = lower.findIndex(h=>h.includes(c)); if(i>-1) return headers[i]; }
+      return null;
+    };
+    const gName = guess(['nama','name','tamu','guest']) || headers[0];
+    const gGroup = guess(['group','grup','kelompok']);
+    const gCategory = guess(['category','kategori','tier','tipe']);
+    const gCount = guess(['guest_count','jumlah','pax','count','orang']);
+    const gSession = guess(['session','sesi']);
+    if(gName) $('colName').value = gName;
+    if(gGroup) $('colGroup').value = gGroup;
+    if(gCategory) $('colCategory').value = gCategory;
+    if(gCount) $('colCount').value = gCount;
+    if(gSession) $('colSession').value = gSession;
+    importFromMapping();
+    [$('colName'),$('colGroup'),$('colCategory'),$('colCount'),$('colSession')].forEach(sel=>sel.addEventListener('change', importFromMapping));
+  }
+
+  function importFromMapping(){
+    const cN = $('colName').value, cG = $('colGroup').value, cCat = $('colCategory').value,
+          cC = $('colCount').value, cS = $('colSession').value;
+    if(!cN || !rows.length) return;
+    guests = rows.map(r=>({
+      name: String(r[cN] ?? '').trim(),
+      group: cG ? String(r[cG] ?? '').trim() : '',
+      category: cCat ? String(r[cCat] ?? '').trim() : '',
+      count: cC ? (parseInt(r[cC]) || 1) : null,
+      session: cS ? String(r[cS] ?? '').trim() : '',
+    })).filter(g=>g.name);
+    renderTable();
+    render();
+  }
+
+  // ---------- Guest table (editable) ----------
+  function renderTable(){
+    const tbody = $('guestTbody');
+    tbody.innerHTML = guests.map((g,i)=>`
+      <tr data-i="${i}">
+        <td class="idx">${i+1}</td>
+        <td><input type="text" data-f="name" value="${escapeAttr(g.name)}" placeholder="Nama tamu"></td>
+        <td><input type="text" data-f="group" value="${escapeAttr(g.group)}" placeholder="—"></td>
+        <td><input type="text" data-f="category" value="${escapeAttr(g.category)}" placeholder="—"></td>
+        <td><input type="number" min="1" data-f="count" value="${g.count==null?'':g.count}" placeholder="—" style="text-align:center;"></td>
+        <td><input type="text" data-f="session" value="${escapeAttr(g.session)}" placeholder="—"></td>
+        <td class="act"><button class="btn-ghost" data-del="${i}" title="Hapus">✕</button></td>
+      </tr>`).join('');
+    $('emptyState').style.display = guests.length ? 'none' : 'block';
+    $('tableCount').textContent = guests.length + (guests.length===1?' tamu':' tamu');
+    tbody.querySelectorAll('input').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        const tr = e.target.closest('tr'); const i = +tr.dataset.i; const f = e.target.dataset.f;
+        if(f==='count'){ guests[i].count = e.target.value===''? null : (parseInt(e.target.value)||1); }
+        else { guests[i][f] = e.target.value; }
+        render();
+      });
+    });
+    tbody.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        guests.splice(+e.target.dataset.del,1);
+        renderTable(); render();
+      });
+    });
+  }
+
+  $('addRowBtn').addEventListener('click', ()=>{
+    guests.push({name:'', group:'', category:'', count:null, session:''});
+    renderTable(); render();
+    const inputs = $('guestTbody').querySelectorAll('tr:last-child input');
+    if(inputs[0]) inputs[0].focus();
+  });
+  $('clearAllBtn').addEventListener('click', ()=>{
+    if(guests.length && !confirm('Hapus semua tamu dari daftar?')) return;
+    guests = []; renderTable(); render();
+  });
+
+  // ---------- Layout config ----------
+  // Label No. 103's official spec (per Tom & Jerry's own Word/custom template settings):
+  // label 64x32mm landscape, 3x4 grid, horizontal pitch 66mm (=64mm label + 2mm gap),
+  // vertical pitch 32mm (=32mm label + 0mm gap — rows sit edge to edge), on a 202x138mm
+  // sheet. The official margins are NOT centered: top margin 9mm, left margin 2mm
+  // (the grid is anchored to the page's top-left, with the remainder — a much
+  // smaller ~1mm — left over at bottom/right). ml/mt below encode that anchor.
+  const presets = {
+    '64x32x3x4': {w:64,h:32,c:3,r:4, gx:2, gy:0, page:'202x138', ml:2, mt:9},
+    '103.5x37x2x7': {w:103.5,h:37,c:2,r:7},
+    '105x35x2x8': {w:105,h:35,c:2,r:8},
+    '105x28.5x2x10': {w:105,h:28.5,c:2,r:10},
+    '70x42.3x3x7': {w:70,h:42.3,c:3,r:7},
+    '70x35x3x8': {w:70,h:35,c:3,r:8},
+  };
+  function applyPreset(p){
+    $('labelW').value=p.w; $('labelH').value=p.h; $('cols').value=p.c; $('rowsN').value=p.r;
+    if(p.gx!=null) $('gapX').value=p.gx;
+    if(p.gy!=null) $('gapY').value=p.gy;
+    if(p.page){ $('pageSize').value=p.page; $('offX').value=0; $('offY').value=0; }
+    marginOverride = (p.ml!=null && p.mt!=null) ? {ml:p.ml, mt:p.mt} : null;
+  }
+  $('preset').addEventListener('change', ()=>{
+    const v = $('preset').value;
+    $('customFields').style.display = v==='custom' ? 'block' : 'none';
+    if(v!=='custom'){ applyPreset(presets[v]); }
+    else { marginOverride = null; }
+    render();
+  });
+  // Editing a dimension by hand invalidates any official-spec margin anchor (it no
+  // longer matches the manufacturer's numbers), so we fall back to auto-centering.
+  // offX/offY are the deliberate exception — they're the calibration nudge meant to
+  // apply on top of whichever base margin (anchored or centered) is active.
+  const OVERRIDE_INVALIDATING_FIELDS = ['labelW','labelH','cols','rowsN','gapX','gapY','pageSize'];
+  ['labelW','labelH','cols','rowsN','gapX','gapY','pageSize','offX','offY'].forEach(id=>{
+    const handler = ()=>{
+      if(OVERRIDE_INVALIDATING_FIELDS.includes(id)) marginOverride = null;
+      render();
+    };
+    $(id).addEventListener('input', handler);
+    $(id).addEventListener('change', handler);
+  });
+  // init custom fields from default preset
+  (function initPreset(){ const p = presets[$('preset').value]; if(p){ applyPreset(p); } })();
+
+  // ---------- Text template controls ----------
+  ['showPrefix','prefixText','defaultTitle','showNote','noteDefault'].forEach(id=>{
+    $(id).addEventListener('input', render);
+    $(id).addEventListener('change', render);
+  });
+  function syncFieldVisibility(){
+    $('prefixField').style.display = $('showPrefix').checked ? 'block':'none';
+    $('noteField').style.display = $('showNote').checked ? 'block':'none';
+  }
+  $('showPrefix').addEventListener('change', syncFieldVisibility);
+  $('showNote').addEventListener('change', syncFieldVisibility);
+  syncFieldVisibility();
+  $('trueSize').addEventListener('change', render);
+
+  // ---------- Rendering the print stage ----------
+  function render(){
+    const pageDims = $('pageSize').value.split('x').map(Number);
+    const pageW = pageDims[0], pageH = pageDims[1];
+    const labelW = parseFloat($('labelW').value)||70;
+    const labelH = parseFloat($('labelH').value)||42.3;
+    const cols = Math.max(1, parseInt($('cols').value)||1);
+    const rowsN = Math.max(1, parseInt($('rowsN').value)||1);
+    const gapX = parseFloat($('gapX').value)||0;
+    const gapY = parseFloat($('gapY').value)||0;
+    const offX = parseFloat($('offX').value)||0;
+    const offY = parseFloat($('offY').value)||0;
+    const perPage = cols*rowsN;
+
+    const gridW = cols*labelW + (cols-1)*gapX;
+    const gridH = rowsN*labelH + (rowsN-1)*gapY;
+    const marginLeft = (marginOverride ? marginOverride.ml : Math.max(0,(pageW-gridW)/2)) + offX;
+    const marginTop = (marginOverride ? marginOverride.mt : Math.max(0,(pageH-gridH)/2)) + offY;
+
+    // stats
+    $('statGuests').textContent = guests.length;
+    $('statPerPage').textContent = perPage;
+    const pageCount = guests.length ? Math.ceil(guests.length/perPage) : 1;
+    $('statPages').textContent = pageCount;
+
+    // screen scale: fit page width to the available viewing space (responsive),
+    // unless "true size" mode is on — then 1mm on paper = 1mm on screen (CSS's own
+    // 96px/inch reference, the same ratio the browser uses when it actually prints).
+    const trueSize = $('trueSize').checked;
+    const mainEl = document.querySelector('.main');
+    const available = Math.max(220, (mainEl ? mainEl.clientWidth : window.innerWidth) - 48);
+    const targetPxWidth = trueSize ? (pageW*MM_PER_PX_SCALE) : Math.min(640, available);
+    const scale = targetPxWidth / (pageW*MM_PER_PX_SCALE);
+    currentScale = scale;
+    if($('scaleInfo')){
+      $('scaleInfo').textContent = trueSize
+        ? `Ukuran asli 100% — 1 mm di kertas ≈ 1 mm di layar (bergantung skala tampilan perangkat). Geser ke samping bila lebih lebar dari layar.`
+        : `Diskalakan ${Math.round(scale*100)}% agar muat di layar — proporsi lebar dan tinggi kertas tetap sesuai aslinya.`;
+    }
+
+    const showPrefix = $('showPrefix').checked;
+    const showNote = $('showNote').checked;
+    const prefixText = $('prefixText').value;
+    const defaultTitle = $('defaultTitle').value;
+    const noteDefault = $('noteDefault').value;
+
+    const stage = $('stage');
+    stage.innerHTML = '';
+
+    const list = guests.length ? guests : [];
+    const totalPages = list.length ? pageCount : 1;
+
+    for(let p=0; p<totalPages; p++){
+      const pageGuests = list.slice(p*perPage, p*perPage+perPage);
+      const sheet = document.createElement('div');
+      sheet.className = 'sheet';
+      sheet.style.width = (pageW*MM_PER_PX_SCALE*scale)+'px';
+      sheet.style.height = (pageH*MM_PER_PX_SCALE*scale)+'px';
+
+      const label = document.createElement('div');
+      label.className = 'pagelabel';
+      label.textContent = `Lembar ${p+1} / ${totalPages} — ${pageW}×${pageH} mm`;
+      sheet.appendChild(label);
+
+      const grid = document.createElement('div');
+      grid.className = 'label-grid';
+      grid.style.left = (marginLeft*MM_PER_PX_SCALE*scale)+'px';
+      grid.style.top = (marginTop*MM_PER_PX_SCALE*scale)+'px';
+      grid.style.gridTemplateColumns = `repeat(${cols}, ${labelW*MM_PER_PX_SCALE*scale}px)`;
+      grid.style.gridTemplateRows = `repeat(${rowsN}, ${labelH*MM_PER_PX_SCALE*scale}px)`;
+      grid.style.columnGap = (gapX*MM_PER_PX_SCALE*scale)+'px';
+      grid.style.rowGap = (gapY*MM_PER_PX_SCALE*scale)+'px';
+
+      for(let i=0;i<perPage;i++){
+        const g = pageGuests[i];
+        const cell = document.createElement('div');
+        cell.className = 'sticker' + (g?'':' empty');
+        if(g){
+          const title = defaultTitle;
+          // If a guest-count column was mapped, only show the default note when that
+          // guest brings more than 1 person — a solo guest ("Rio", count 1) shouldn't
+          // get "beserta keluarga" by accident. With no count data at all, keep the
+          // simple behavior of always using the default note.
+          const note = (g.count == null ? noteDefault : (g.count > 1 ? noteDefault : ''));
+          let html = '';
+          if(showPrefix && prefixText) html += `<div class="line1" style="font-size:${clampFont(labelH,FONT_RATIO.prefix)}px;">${escapeHtml(prefixText)}</div>`;
+          const nameLine = [title, g.name].filter(Boolean).join(' ');
+          html += `<div class="line2" style="font-size:${clampFont(labelH,FONT_RATIO.name)}px;">${escapeHtml(nameLine)}</div>`;
+          if(showNote && note) html += `<div class="line3" style="font-size:${clampFont(labelH,FONT_RATIO.note)}px;">${escapeHtml(note)}</div>`;
+          cell.innerHTML = html;
+        }
+        grid.appendChild(cell);
+      }
+      sheet.appendChild(grid);
+      stage.appendChild(sheet);
+    }
+  }
+
+  function clampFont(labelHmm, ratio){
+    // font size in px scaled the same as the sheet, based on label height
+    return Math.max(6, labelHmm*MM_PER_PX_SCALE*currentScale*ratio);
+  }
+
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  function escapeAttr(s){ return escapeHtml(s); }
+
+  // ---------- Print: swap to real mm sizing just before printing ----------
+  function canPrint(){
+    if(typeof window.print !== 'function'){
+      alert('Fitur cetak tidak didukung oleh browser/aplikasi ini. Buka tautan halaman ini di Safari atau Chrome (bukan di dalam aplikasi lain), lalu coba lagi.');
+      return false;
+    }
+    return true;
+  }
+  $('printBtn').addEventListener('click', ()=>{
+    if(!canPrint()) return;
+    preparePrintSizes(false);
+    window.print();
+  });
+  window.addEventListener('afterprint', render); // restore screen-scaled preview
+
+  // ---------- Test print: fill one full sheet with random names + visible label borders ----------
+  const TEST_FIRST_NAMES = ['Budi','Siti','Andi','Rina','Dedi','Sri','Agus','Nur','Eko','Wati',
+    'Hendra','Lina','Fajar','Dewi','Rio','Putri','Bayu','Ayu','Yusuf','Indah',
+    'Arif','Rahma','Doni','Sinta','Wawan','Yuni','Irfan','Melati','Adi','Tika'];
+  const TEST_LAST_NAMES = ['Santoso','Wijaya','Kusuma','Pratama','Saputra','Wibowo','Hidayat','Setiawan',
+    'Permata','Lestari','Gunawan','Nugroho','Purnama','Handoko','Kurniawan'];
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a;
+  }
+  function generateRandomGuests(n){
+    const firsts = shuffle(TEST_FIRST_NAMES), lasts = shuffle(TEST_LAST_NAMES);
+    const out = [];
+    for(let i=0;i<n;i++){
+      const f = firsts[i % firsts.length];
+      const l = lasts[(i + Math.floor(i/firsts.length)) % lasts.length];
+      out.push({name: `${f} ${l}`, group:'', category:'', count:null, session:''});
+    }
+    return out;
+  }
+  $('printTestBtn').addEventListener('click', ()=>{
+    if(!canPrint()) return;
+    const cols = Math.max(1, parseInt($('cols').value)||1);
+    const rowsN = Math.max(1, parseInt($('rowsN').value)||1);
+    const perPage = cols*rowsN;
+    const backup = guests;
+    guests = generateRandomGuests(perPage); // guest table itself is left untouched
+    render();
+    preparePrintSizes(true);
+    window.print();
+    window.addEventListener('afterprint', function restoreAfterTest(){
+      window.removeEventListener('afterprint', restoreAfterTest);
+      guests = backup;
+      render();
+    }, {once:true});
+  });
+
+  function preparePrintSizes(showBorders){
+    const pageDims = $('pageSize').value.split('x').map(Number);
+    const pageW = pageDims[0], pageH = pageDims[1];
+    const labelW = parseFloat($('labelW').value)||70;
+    const labelH = parseFloat($('labelH').value)||42.3;
+    const cols = Math.max(1, parseInt($('cols').value)||1);
+    const rowsN = Math.max(1, parseInt($('rowsN').value)||1);
+    const gapX = parseFloat($('gapX').value)||0;
+    const gapY = parseFloat($('gapY').value)||0;
+    const offX = parseFloat($('offX').value)||0;
+    const offY = parseFloat($('offY').value)||0;
+    const perPage = cols*rowsN;
+    const gridW = cols*labelW + (cols-1)*gapX;
+    const gridH = rowsN*labelH + (rowsN-1)*gapY;
+    const marginLeft = (marginOverride ? marginOverride.ml : Math.max(0,(pageW-gridW)/2)) + offX;
+    const marginTop = (marginOverride ? marginOverride.mt : Math.max(0,(pageH-gridH)/2)) + offY;
+
+    let styleTag = document.getElementById('printSizeStyle');
+    if(!styleTag){ styleTag = document.createElement('style'); styleTag.id='printSizeStyle'; document.head.appendChild(styleTag); }
+    styleTag.textContent = `
+      @page{ size:${pageW}mm ${pageH}mm; margin:0; }
+      @media print{
+        .sheet{ width:${pageW}mm !important; height:${pageH}mm !important; }
+        .label-grid{
+          left:${marginLeft}mm !important; top:${marginTop}mm !important;
+          grid-template-columns: repeat(${cols}, ${labelW}mm) !important;
+          grid-template-rows: repeat(${rowsN}, ${labelH}mm) !important;
+          column-gap:${gapX}mm !important; row-gap:${gapY}mm !important;
+        }
+        .sticker .line1{ font-size:${(labelH*FONT_RATIO.prefix).toFixed(2)}mm !important; }
+        .sticker .line2{ font-size:${(labelH*FONT_RATIO.name).toFixed(2)}mm !important; }
+        .sticker .line3{ font-size:${(labelH*FONT_RATIO.note).toFixed(2)}mm !important; }
+        ${showBorders ? '.sticker{ border:0.4mm solid #FF1E56 !important; }' : ''}
+      }`;
+  }
+
+  // ---------- Download PDF: exact mm sizing, generated in-browser (bypasses OS print
+  // dialogs — needed because Android's native print pipeline ignores our @page CSS size
+  // and only offers a fixed list like A4/Letter). Vector text, not a rasterized image. ----------
+  const MM_PER_PT = 2.834645669; // 1pt = 1/72in, 1in = 25.4mm
+  function buildLayoutForPdf(){
+    const pageDims = $('pageSize').value.split('x').map(Number);
+    const pageW = pageDims[0], pageH = pageDims[1];
+    const labelW = parseFloat($('labelW').value)||70;
+    const labelH = parseFloat($('labelH').value)||42.3;
+    const cols = Math.max(1, parseInt($('cols').value)||1);
+    const rowsN = Math.max(1, parseInt($('rowsN').value)||1);
+    const gapX = parseFloat($('gapX').value)||0;
+    const gapY = parseFloat($('gapY').value)||0;
+    const offX = parseFloat($('offX').value)||0;
+    const offY = parseFloat($('offY').value)||0;
+    const perPage = cols*rowsN;
+    const gridW = cols*labelW + (cols-1)*gapX;
+    const gridH = rowsN*labelH + (rowsN-1)*gapY;
+    const marginLeft = (marginOverride ? marginOverride.ml : Math.max(0,(pageW-gridW)/2)) + offX;
+    const marginTop = (marginOverride ? marginOverride.mt : Math.max(0,(pageH-gridH)/2)) + offY;
+    return {pageW,pageH,labelW,labelH,cols,rowsN,gapX,gapY,perPage,marginLeft,marginTop};
+  }
+  function drawStickerCellPdf(doc, g, cellX, cellY, labelW, labelH, opts, showBorder){
+    if(showBorder){
+      doc.setDrawColor(255,30,86); // bright pink-red, easy to see against white sticker paper
+      doc.setLineWidth(0.4);
+      doc.rect(cellX, cellY, labelW, labelH);
+    }
+    if(!g) return;
+    const {showPrefix, showNote, prefixText, defaultTitle, noteDefault} = opts;
+    const note = (g.count == null ? noteDefault : (g.count > 1 ? noteDefault : ''));
+    const nameLine = [defaultTitle, g.name].filter(Boolean).join(' ');
+    const lines = [];
+    if(showPrefix && prefixText) lines.push({text: prefixText, sizeMm: labelH*FONT_RATIO.prefix, style:'normal'});
+    lines.push({text: nameLine, sizeMm: labelH*FONT_RATIO.name, style:'bold'});
+    if(showNote && note) lines.push({text: note, sizeMm: labelH*FONT_RATIO.note, style:'normal'});
+
+    const lineHeightsMm = lines.map(l=>l.sizeMm*1.25);
+    const totalH = lineHeightsMm.reduce((a,b)=>a+b,0);
+    let y = cellY + (labelH - totalH)/2;
+    const cx = cellX + labelW/2;
+    doc.setFont('helvetica');
+    lines.forEach((l,i)=>{
+      const lh = lineHeightsMm[i];
+      y += lh;
+      doc.setFontSize(l.sizeMm / MM_PER_PT);
+      doc.setFont('helvetica', l.style);
+      // baseline sits near the bottom of the line box, roughly 80% down
+      doc.text(String(l.text), cx, y - lh*0.22, {align:'center', baseline:'alphabetic'});
+    });
+  }
+  function generatePdf(listOverride, showBorders){
+    if(!window.jspdf || !window.jspdf.jsPDF){
+      alert('Gagal memuat pustaka PDF. Periksa koneksi internet Anda, lalu coba lagi.');
+      return;
+    }
+    const {jsPDF} = window.jspdf;
+    const L = buildLayoutForPdf();
+    const opts = {
+      showPrefix: $('showPrefix').checked,
+      showNote: $('showNote').checked,
+      prefixText: $('prefixText').value,
+      defaultTitle: $('defaultTitle').value,
+      noteDefault: $('noteDefault').value,
+    };
+    const list = listOverride || guests;
+    const pageCount = list.length ? Math.ceil(list.length / L.perPage) : 1;
+    const orientation = L.pageW >= L.pageH ? 'landscape' : 'portrait';
+    const doc = new jsPDF({unit:'mm', format:[L.pageW, L.pageH], orientation});
+
+    for(let p=0; p<pageCount; p++){
+      if(p>0) doc.addPage([L.pageW, L.pageH], orientation);
+      const pageGuests = list.slice(p*L.perPage, p*L.perPage+L.perPage);
+      for(let i=0;i<L.perPage;i++){
+        const col = i % L.cols, row = Math.floor(i / L.cols);
+        const cellX = L.marginLeft + col*(L.labelW + L.gapX);
+        const cellY = L.marginTop + row*(L.labelH + L.gapY);
+        drawStickerCellPdf(doc, pageGuests[i], cellX, cellY, L.labelW, L.labelH, opts, showBorders);
+      }
+    }
+    doc.save('stiker-tamu.pdf');
+  }
+  $('downloadPdfBtn').addEventListener('click', ()=>{
+    if(!guests.length){ alert('Belum ada tamu untuk dicetak. Impor file atau tambahkan tamu manual dulu.'); return; }
+    generatePdf(guests, false);
+  });
+
+  // ---------- responsive: re-fit preview on viewport/orientation changes ----------
+  let resizeTimer = null;
+  window.addEventListener('resize', ()=>{
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(render, 120);
+  });
+
+  // ---------- init ----------
+  renderTable();
+  render();
+})();
+</script>
+
+</body>
+</html>

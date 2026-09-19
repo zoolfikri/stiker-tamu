@@ -296,7 +296,7 @@ footer.hint-bar{
           <option value="210x297" selected>A4 (210 × 297 mm)</option>
           <option value="215.9x330.2">F4 / Folio (215,9 × 330,2 mm)</option>
           <option value="215.9x279.4">Letter (215,9 × 279,4 mm)</option>
-          <option value="202x138">Lembar Label No. 103 (20,2 × 13,8 cm)</option>
+          <option value="204x165">Lembar Label No. 103 (20,4 × 16,5 cm)</option>
         </select>
       </div>
       <div class="row2">
@@ -506,13 +506,12 @@ footer.hint-bar{
 
   // ---------- Layout config ----------
   // Label No. 103's official spec (per Tom & Jerry's own Word/custom template settings):
-  // label 64x32mm landscape, 3x4 grid, horizontal pitch 66mm (=64mm label + 2mm gap),
-  // vertical pitch 32mm (=32mm label + 0mm gap — rows sit edge to edge), on a 202x138mm
-  // sheet. The official margins are NOT centered: top margin 9mm, left margin 2mm
-  // (the grid is anchored to the page's top-left, with the remainder — a much
-  // smaller ~1mm — left over at bottom/right). ml/mt below encode that anchor.
+  // label 64x32mm landscape, 3x4 grid, horizontal pitch 68mm (=64mm label + 4mm gap),
+  // vertical pitch 38mm (=32mm label + 6mm gap), on a 204x165mm sheet. The official
+  // margins are NOT centered: top margin 9mm, left margin 2mm (the grid is anchored
+  // to the page's top-left). ml/mt below encode that anchor.
   const presets = {
-    '64x32x3x4': {w:64,h:32,c:3,r:4, gx:2, gy:0, page:'202x138', ml:2, mt:9},
+    '64x32x3x4': {w:64,h:32,c:3,r:4, gx:4, gy:6, page:'204x165', ml:2, mt:9},
     '103.5x37x2x7': {w:103.5,h:37,c:2,r:7},
     '105x35x2x8': {w:105,h:35,c:2,r:8},
     '105x28.5x2x10': {w:105,h:28.5,c:2,r:10},

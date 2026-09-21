@@ -105,12 +105,13 @@ textarea{resize:vertical; min-height:44px;}
 .btn-ghost:hover{color:var(--accent);}
 .divider{height:1px; background:var(--line); margin:22px 0;}
 .main{flex:1; padding:32px 40px 80px; overflow-x:auto;}
-.main-head{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:22px; gap:20px; flex-wrap:wrap;}
+/* bottom gap leaves room for the first sheet's page label, which sits 26px above it */
+.main-head{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:42px; gap:20px; flex-wrap:wrap;}
 .main-head h2{font-size:1.1rem; margin:0 0 4px; font-weight:600;}
 .main-head p{margin:0; color:var(--ink-soft); font-size:.83rem;}
 .guest-table-wrap{
   background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden;
-  margin-bottom:32px; box-shadow:var(--sheet-shadow);
+  margin:36px 0 32px; box-shadow:var(--sheet-shadow);
 }
 .guest-table-scroll{max-height:280px; overflow-y:auto; overflow-x:auto;}
 table.guests{width:100%; min-width:660px; border-collapse:collapse; font-size:.82rem;}
@@ -423,6 +424,8 @@ footer.hint-bar{
       <label class="chk" style="margin:0;"><input type="checkbox" id="trueSize"><span>Tampilkan ukuran asli (100%, sesuai fisik)</span></label>
     </div>
 
+    <div class="stage" id="stage"></div>
+
     <div class="guest-table-wrap noprint">
       <div class="guest-table-scroll">
         <table class="guests" id="guestTable">
@@ -440,8 +443,6 @@ footer.hint-bar{
         </div>
       </div>
     </div>
-
-    <div class="stage" id="stage"></div>
 
     <footer class="hint-bar noprint">Data tamu diproses sepenuhnya di peramban ini — tidak diunggah ke server mana pun.</footer>
   </main>

@@ -36,11 +36,16 @@ body{
   min-height:100vh;
 }
 h1,h2{font-family:'Inter',system-ui,sans-serif; letter-spacing:-.02em;}
-.app{display:flex; min-height:100vh;}
+.app{display:flex; min-height:100vh; --rail-w:380px;}
 .rail{
-  width:380px; flex:0 0 380px; background:var(--panel); border-right:1px solid var(--line);
+  width:var(--rail-w); flex:0 0 var(--rail-w); background:var(--panel); border-right:1px solid var(--line);
   padding:28px 24px 40px; overflow-y:auto; max-height:100vh; position:sticky; top:0;
+  transition:margin-left .22s ease;
 }
+.rail:focus{outline:none;}
+/* Desktop: collapsing pulls the rail out of flow so the preview takes the space. */
+.app:not(.rail-open) .rail{margin-left:calc(-1 * var(--rail-w));}
+.rail-overlay{display:none;}
 .brand{display:flex; align-items:center; gap:9px; margin-bottom:4px;}
 .brand h1{font-size:1.25rem; font-weight:700; margin:0; letter-spacing:-.02em;}
 .brand .mark{width:9px; height:9px; border-radius:2.5px; background:var(--accent); flex:0 0 9px;}
@@ -104,7 +109,7 @@ textarea{resize:vertical; min-height:44px;}
 }
 .btn:hover{border-color:var(--accent-soft);}
 .btn:active{transform:scale(.98);}
-.btn-primary{background:var(--accent); border-color:var(--accent); color:#fff; width:100%; padding:12px 14px; font-size:.92rem;}
+.btn-primary{background:var(--accent); border-color:var(--accent); color:#fff; padding:11px 18px; font-size:.9rem;}
 .btn-primary:hover{background:var(--accent-soft); border-color:var(--accent-soft);}
 .btn-ghost{background:none; border:none; color:var(--ink-soft); padding:4px 6px; font-weight:500;}
 .btn-ghost:hover{color:var(--accent);}
@@ -113,9 +118,30 @@ textarea{resize:vertical; min-height:44px;}
 .btn-accent:hover{background:var(--accent-soft); border-color:var(--accent-soft);}
 .main{flex:1; padding:32px 40px 80px; overflow-x:auto;}
 /* bottom gap leaves room for the first sheet's page label, which sits 26px above it */
-.main-head{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:42px; gap:20px; flex-wrap:wrap;}
-.main-head h2{font-size:1.1rem; margin:0 0 4px; font-weight:600;}
-.main-head p{margin:0; color:var(--ink-soft); font-size:.83rem;}
+/* Toolbar above the sheet: the print actions sit next to the thing they act on.
+   Bottom gap leaves room for the first sheet's page label, which sits 26px above it. */
+.preview-bar{
+  background:var(--surface); border:1px solid var(--line); border-radius:12px;
+  padding:14px 16px; margin-bottom:42px;
+}
+.pb-top{display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+.pb-title{flex:1 1 220px; min-width:0;}
+.pb-title h2{font-size:1.05rem; margin:0; font-weight:700;}
+.pb-title p{margin:2px 0 0; color:var(--ink-soft); font-size:.8rem;}
+.pb-actions{
+  display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+  margin-top:14px; padding-top:14px; border-top:1px solid var(--line);
+}
+.pb-buttons{display:flex; gap:8px; flex-wrap:wrap;}
+.btn-icon{gap:9px; padding:9px 13px;}
+.btn-icon .bars{
+  width:16px; height:12px; flex:0 0 16px; position:relative; display:inline-block;
+  border-top:2px solid currentColor; border-bottom:2px solid currentColor;
+}
+.btn-icon .bars::after{
+  content:""; position:absolute; left:0; right:0; top:50%; transform:translateY(-1px);
+  border-top:2px solid currentColor;
+}
 .guest-panel{
   background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden;
   margin:36px 0 32px; box-shadow:var(--sheet-shadow);
@@ -177,6 +203,8 @@ table.guests td.act{width:34px; text-align:center;}
 footer.hint-bar{
   max-width:640px; margin:0 auto; text-align:center; color:var(--ink-soft); font-size:.78rem; line-height:1.6;
 }
+footer.hint-bar p{margin:0 0 8px;}
+footer.hint-bar p:last-child{margin-bottom:0;}
 
 .paper-preview{
   background:var(--surface); border:1px solid var(--line); border-radius:10px;
@@ -204,7 +232,7 @@ footer.hint-bar{
   body{background:#fff !important; margin:0 !important; min-height:0 !important;}
   html{margin:0 !important;}
   .app{min-height:0 !important;}
-  .rail, .main-head, .guest-panel, footer.hint-bar, .noprint{display:none !important;}
+  .rail, .rail-overlay, .preview-bar, .guest-panel, footer.hint-bar, .noprint{display:none !important;}
   .app{display:block;}
   .main{display:contents !important;}
   .stage{gap:0; align-items:flex-start;}
@@ -220,14 +248,24 @@ footer.hint-bar{
   .rail{width:320px; flex:0 0 320px; padding:24px 18px 32px;}
   .main{padding:28px 24px 70px;}
 }
+/* Below this width the rail stops taking layout space and slides in over the content,
+   so the preview and guest list are what you land on. */
 @media (max-width: 880px){
-  .app{flex-direction:column;}
   .rail{
-    width:100%; flex:none; max-height:none; position:static;
-    border-right:none; border-bottom:1px solid var(--line); padding:20px 18px 28px;
+    position:fixed; top:0; left:0; bottom:0; z-index:50;
+    width:min(86vw, 340px); flex:none; max-height:none; margin-left:0 !important;
+    border-right:1px solid var(--line); padding:20px 18px 28px;
+    transform:translateX(-100%); transition:transform .22s ease;
+    box-shadow:0 0 40px rgba(0,0,0,.18);
   }
-  .main{padding:24px 18px 60px;}
-  .main-head{align-items:flex-start;}
+  .app.rail-open .rail{transform:none;}
+  .rail-overlay{
+    display:block; position:fixed; inset:0; z-index:45; background:rgba(0,0,0,.45);
+    opacity:0; pointer-events:none; transition:opacity .22s ease;
+  }
+  .app.rail-open .rail-overlay{opacity:1; pointer-events:auto;}
+  body.rail-locked{overflow:hidden;}
+  .main{padding:24px 18px 60px; width:100%;}
   .import-bar{grid-template-columns:1fr;}
 }
 @media (max-width: 560px){
@@ -244,6 +282,11 @@ footer.hint-bar{
   .panel-actions .btn{flex:1 1 0;}
   .tpl-btns .btn{flex:1 1 0;}
   .import-bar, .panel-head{padding:12px;}
+  .preview-bar{padding:12px;}
+  .pb-buttons{width:100%;}
+  .pb-buttons .btn{flex:1 1 calc(50% - 4px);}
+  .pb-buttons .btn-primary{flex:1 1 100%;}
+  .pb-actions .stat-row{width:100%;}
   .import-extra{padding:0 12px 12px;}
   .guest-panel{margin:28px 0 24px;}
   .step-body{padding:12px;}
@@ -257,7 +300,8 @@ footer.hint-bar{
 
 
 <div class="app">
-  <aside class="rail noprint">
+  <div class="rail-overlay noprint" id="railOverlay" hidden></div>
+  <aside class="rail noprint" id="railPanel" tabindex="-1" aria-label="Pengaturan stiker">
     <div class="brand"><span class="mark"></span><h1>Stiker Tamu</h1></div>
     <p class="tagline">Impor daftar tamu dari Excel, lalu susun otomatis ke layout kertas stiker — siap cetak dalam ukuran asli.</p>
 
@@ -407,34 +451,32 @@ footer.hint-bar{
       </div>
     </div>
 
-    <div class="step step-3">
-      <div class="step-head">
-        <span class="n">3</span>
-        <div><span class="t">Cetak</span><span class="s">Cek jumlah lembar, lalu cetak atau unduh PDF</span></div>
+  </aside>
+
+  <main class="main">
+    <div class="preview-bar noprint">
+      <div class="pb-top">
+        <button class="btn btn-icon" type="button" id="railToggle" aria-expanded="true" aria-controls="railPanel">
+          <span class="bars" aria-hidden="true"></span>Pengaturan
+        </button>
+        <div class="pb-title">
+          <h2>Pratinjau cetak</h2>
+          <p id="scaleInfo">Diskalakan agar muat di layar — proporsi lebar dan tinggi kertas tetap sesuai aslinya.</p>
+        </div>
+        <label class="chk" style="margin:0;"><input type="checkbox" id="trueSize"><span>Ukuran asli (100%)</span></label>
       </div>
-      <div class="step-body">
+      <div class="pb-actions">
         <div class="stat-row">
           <div class="stat"><div class="v" id="statGuests">0</div><div class="l">Tamu</div></div>
           <div class="stat"><div class="v" id="statPerPage">20</div><div class="l">Per lembar</div></div>
           <div class="stat"><div class="v" id="statPages">0</div><div class="l">Lembar</div></div>
         </div>
-
-        <button class="btn btn-primary" id="printBtn" style="margin-top:16px;">Cetak stiker</button>
-        <button class="btn" id="downloadPdfBtn" style="width:100%; margin-top:8px;">Unduh PDF (ukuran presisi)</button>
-        <button class="btn" id="printTestBtn" style="width:100%; margin-top:8px;">Cetak uji coba (nama acak + garis label)</button>
-        <div class="hint" style="margin-top:8px;">Cetak uji coba mengisi satu lembar penuh dengan nama acak dan menampilkan garis tepi tiap label, tanpa mengubah daftar tamu Anda — cocok untuk cek posisi sebelum pakai kertas stiker asli.</div>
-        <div class="hint" style="margin-top:10px;">Tombol Cetak tidak merespons, atau ukuran kertas di dialog cetak tidak sesuai (sering terjadi di HP Android)? Gunakan tombol <strong>Unduh PDF</strong> — ukurannya presisi di perangkat apa pun, lalu cetak file PDF tersebut dari aplikasi/printer Anda.</div>
+        <div class="pb-buttons">
+          <button class="btn btn-primary" id="printBtn">Cetak stiker</button>
+          <button class="btn" id="downloadPdfBtn">Unduh PDF</button>
+          <button class="btn" id="printTestBtn">Cetak uji coba</button>
+        </div>
       </div>
-    </div>
-  </aside>
-
-  <main class="main">
-    <div class="main-head noprint">
-      <div>
-        <h2>Pratinjau cetak</h2>
-        <p id="scaleInfo">Diskalakan agar muat di layar — proporsi lebar dan tinggi kertas tetap sesuai aslinya.</p>
-      </div>
-      <label class="chk" style="margin:0;"><input type="checkbox" id="trueSize"><span>Tampilkan ukuran asli (100%, sesuai fisik)</span></label>
     </div>
 
     <div class="stage" id="stage"></div>
@@ -510,7 +552,11 @@ footer.hint-bar{
       </div>
     </section>
 
-    <footer class="hint-bar noprint">Data tamu diproses sepenuhnya di peramban ini — tidak diunggah ke server mana pun.</footer>
+    <footer class="hint-bar noprint">
+      <p><strong>Cetak uji coba</strong> mengisi satu lembar penuh dengan nama acak dan menampilkan garis tepi tiap label, tanpa mengubah daftar tamu Anda — cocok untuk cek posisi sebelum pakai kertas stiker asli.</p>
+      <p>Tombol Cetak tidak merespons, atau ukuran kertas di dialog cetak tidak sesuai (sering terjadi di HP Android)? Gunakan tombol <strong>Unduh PDF</strong> — ukurannya presisi di perangkat apa pun, lalu cetak file PDF tersebut dari aplikasi/printer Anda.</p>
+      <p>Data tamu diproses sepenuhnya di peramban ini — tidak diunggah ke server mana pun.</p>
+    </footer>
   </main>
 </div>
 
@@ -861,7 +907,9 @@ footer.hint-bar{
     const trueSize = $('trueSize').checked;
     const mainEl = document.querySelector('.main');
     const available = Math.max(220, (mainEl ? mainEl.clientWidth : window.innerWidth) - 48);
-    const targetPxWidth = trueSize ? (pageW*MM_PER_PX_SCALE) : Math.min(640, available);
+    // Cap keeps the sheet from ballooning on wide monitors, but is loose enough that
+    // collapsing the sidebar actually buys a bigger preview.
+    const targetPxWidth = trueSize ? (pageW*MM_PER_PX_SCALE) : Math.min(1200, available);
     const scale = targetPxWidth / (pageW*MM_PER_PX_SCALE);
     currentScale = scale;
     if($('scaleInfo')){
@@ -1091,6 +1139,44 @@ footer.hint-bar{
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(render, 120);
   });
+
+  // ---------- Sidebar toggle ----------
+  // Below 880px the rail floats over the content as a drawer; above it, it occupies
+  // layout space, so collapsing it changes how much room the preview has.
+  const appEl = document.querySelector('.app');
+  const railToggle = $('railToggle'), railOverlay = $('railOverlay'), railPanel = $('railPanel');
+  const drawerQuery = window.matchMedia('(max-width: 880px)');
+  const railIsOpen = () => appEl.classList.contains('rail-open');
+
+  function setRailOpen(open){
+    appEl.classList.toggle('rail-open', open);
+    railToggle.setAttribute('aria-expanded', String(open));
+    const drawer = drawerQuery.matches;
+    // only lock the page behind the rail while it actually covers the content
+    document.body.classList.toggle('rail-locked', open && drawer);
+    railOverlay.hidden = !drawer;
+    if(!drawer) render(); // the preview's available width just changed
+  }
+
+  railToggle.addEventListener('click', ()=>{
+    const open = !railIsOpen();
+    setRailOpen(open);
+    if(drawerQuery.matches){
+      if(open) railPanel.focus(); else railToggle.focus();
+    } else {
+      // re-fit once the collapse animation has settled on its final width
+      setTimeout(render, 260);
+    }
+  });
+  railOverlay.addEventListener('click', ()=>{ setRailOpen(false); railToggle.focus(); });
+  document.addEventListener('keydown', e=>{
+    if(e.key==='Escape' && drawerQuery.matches && railIsOpen()){
+      setRailOpen(false); railToggle.focus();
+    }
+  });
+  // open by default on desktop, closed on mobile — and follow the user across the breakpoint
+  drawerQuery.addEventListener('change', e => setRailOpen(!e.matches));
+  setRailOpen(!drawerQuery.matches);
 
   // ---------- init ----------
   renderTable();

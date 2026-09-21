@@ -270,6 +270,7 @@ footer.hint-bar{
         <label>Preset ukuran</label>
         <select id="preset">
           <option value="64x32x3x4" selected>64 × 32 mm — 3×4 (12/lembar) — Tom &amp; Jerry Label No. 103</option>
+          <option value="tj-labels-103">64 × 32 mm — 3×4 (12/lembar) — TJ Labels No. 103</option>
           <option value="103.5x37x2x7">103,5 × 37 mm — 2×7 (14/lembar)</option>
           <option value="105x35x2x8">105 × 35 mm — 2×8 (16/lembar)</option>
           <option value="105x28.5x2x10">105 × 28,5 mm — 2×10 (20/lembar)</option>
@@ -514,6 +515,9 @@ footer.hint-bar{
   // to the page's top-left). ml/mt below encode that anchor.
   const presets = {
     '64x32x3x4': {w:64,h:32,c:3,r:4, gx:4, gy:6, page:'210x165', ml:6, mt:9},
+    // TJ Labels No. 103: 210x165mm sheet, 1cm top/bottom margin, 0.6cm left/right margin,
+    // horizontal pitch 6.7cm (=64mm label + 3mm gap), vertical pitch 3.8cm (=32mm label + 6mm gap).
+    'tj-labels-103': {w:64,h:32,c:3,r:4, gx:3, gy:6, page:'210x165', ml:6, mt:10},
     '103.5x37x2x7': {w:103.5,h:37,c:2,r:7},
     '105x35x2x8': {w:105,h:35,c:2,r:8},
     '105x28.5x2x10': {w:105,h:28.5,c:2,r:10},

@@ -105,12 +105,13 @@ textarea{resize:vertical; min-height:44px;}
 .btn-ghost:hover{color:var(--accent);}
 .divider{height:1px; background:var(--line); margin:22px 0;}
 .main{flex:1; padding:32px 40px 80px; overflow-x:auto;}
-.main-head{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:22px; gap:20px; flex-wrap:wrap;}
+/* bottom gap leaves room for the first sheet's page label, which sits 26px above it */
+.main-head{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:42px; gap:20px; flex-wrap:wrap;}
 .main-head h2{font-size:1.1rem; margin:0 0 4px; font-weight:600;}
 .main-head p{margin:0; color:var(--ink-soft); font-size:.83rem;}
 .guest-table-wrap{
   background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden;
-  margin-bottom:32px; box-shadow:var(--sheet-shadow);
+  margin:36px 0 32px; box-shadow:var(--sheet-shadow);
 }
 .guest-table-scroll{max-height:280px; overflow-y:auto; overflow-x:auto;}
 table.guests{width:100%; min-width:660px; border-collapse:collapse; font-size:.82rem;}
@@ -161,12 +162,19 @@ footer.hint-bar{
   font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; font-weight:600;
   color:var(--ink-soft); margin:0 0 6px 4px;
 }
+/* Dedicated tokens: --sheet/--surface are near-identical in dark mode, which would
+   leave the sheet and its label cut-outs indistinguishable in the diagram. */
+.paper-preview{--pp-sheet:#E4E4E7; --pp-cut:#FFFFFF;}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .paper-preview{--pp-sheet:#3F3F46; --pp-cut:#18181B;}
+}
+:root[data-theme="dark"] .paper-preview{--pp-sheet:#3F3F46; --pp-cut:#18181B;}
 .paper-preview svg{display:block; width:100%; height:auto; color:var(--ink-soft);}
-.paper-preview .pp-cell{fill:var(--surface); stroke:var(--line);}
-.paper-preview .pp-backing{fill:var(--panel-2);}
+.paper-preview .pp-page{fill:var(--pp-sheet); stroke:var(--line);}
+.paper-preview .pp-cell{fill:var(--pp-cut); stroke:var(--line);}
 .paper-preview .pp-arrow{stroke:currentColor; stroke-width:1; fill:none;}
-.paper-preview .pp-label{fill:currentColor; font-size:8px; font-family:'Inter',sans-serif;}
-.paper-preview .pp-label.pp-strong{font-weight:600; fill:var(--ink);}
+.paper-preview .pp-guide{stroke:currentColor; stroke-width:.6; stroke-dasharray:2 2; opacity:.45; fill:none;}
+.paper-preview .pp-label{fill:currentColor; font-size:8.5px; font-weight:500; font-family:'Inter',sans-serif;}
 
 @media print{
   body{background:#fff !important; margin:0 !important; min-height:0 !important;}
@@ -298,53 +306,59 @@ footer.hint-bar{
 
       <div class="paper-preview">
         <div class="pp-title">Preview</div>
-        <svg viewBox="0 0 340 250" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 360 290" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagram ukuran kertas stiker">
           <defs>
-            <marker id="ppArrowEnd" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+            <marker id="ppArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+              <path d="M0,1 L9,5 L0,9 z" fill="currentColor"></path>
             </marker>
           </defs>
-          <!-- backing sheet with 2x2 sample labels cut out -->
-          <rect class="pp-backing" x="96" y="70" width="164" height="120" rx="4"></rect>
-          <rect class="pp-cell" x="106" y="80" width="66" height="50" rx="3"></rect>
-          <rect class="pp-cell" x="184" y="80" width="66" height="50" rx="3"></rect>
-          <rect class="pp-cell" x="106" y="140" width="66" height="50" rx="3"></rect>
-          <rect class="pp-cell" x="184" y="140" width="66" height="50" rx="3"></rect>
+          <!-- the sheet, with 2x2 sample labels cut out of it -->
+          <rect class="pp-page" x="95" y="70" width="225" height="175" rx="3"></rect>
+          <rect class="pp-cell" x="112" y="90" width="95" height="62" rx="3"></rect>
+          <rect class="pp-cell" x="218" y="90" width="95" height="62" rx="3"></rect>
+          <rect class="pp-cell" x="112" y="165" width="95" height="62" rx="3"></rect>
+          <rect class="pp-cell" x="218" y="165" width="95" height="62" rx="3"></rect>
 
-          <!-- side margins: left edge of backing to first column -->
-          <line class="pp-arrow" x1="40" y1="54" x2="104" y2="54" marker-start="url(#ppArrowEnd)" marker-end="url(#ppArrowEnd)"></line>
-          <text class="pp-label pp-strong" x="10" y="44">Margin samping</text>
-          <text class="pp-label" id="pvSideMargins" x="10" y="66">6 mm</text>
+          <!-- horizontal pitch: start of column 1 to start of column 2 -->
+          <line class="pp-guide" x1="112" y1="46" x2="112" y2="88"></line>
+          <line class="pp-guide" x1="218" y1="46" x2="218" y2="88"></line>
+          <line class="pp-arrow" x1="112" y1="42" x2="218" y2="42" marker-start="url(#ppArrow)" marker-end="url(#ppArrow)"></line>
+          <text class="pp-label" id="pvHPitch" x="165" y="34" text-anchor="middle">Pitch horizontal 68 mm</text>
 
-          <!-- top margin: page top to first row -->
-          <line class="pp-arrow" x1="24" y1="30" x2="24" y2="78" marker-start="url(#ppArrowEnd)" marker-end="url(#ppArrowEnd)"></line>
-          <text class="pp-label pp-strong" x="2" y="24">Margin atas</text>
-          <text class="pp-label" id="pvTopMargin" x="2" y="96" transform="rotate(0)">9 mm</text>
+          <!-- side margin: sheet edge to the first column -->
+          <line class="pp-guide" x1="95" y1="62" x2="95" y2="70"></line>
+          <line class="pp-guide" x1="112" y1="62" x2="112" y2="88"></line>
+          <line class="pp-arrow" x1="95" y1="58" x2="112" y2="58" marker-start="url(#ppArrow)" marker-end="url(#ppArrow)"></line>
+          <text class="pp-label" id="pvSideMargins" x="89" y="61" text-anchor="end">Margin samping 6 mm</text>
 
-          <!-- horizontal pitch: start of col1 to start of col2 -->
-          <line class="pp-arrow" x1="106" y1="16" x2="184" y2="16" marker-start="url(#ppArrowEnd)" marker-end="url(#ppArrowEnd)"></line>
-          <text class="pp-label pp-strong" x="106" y="10">Jarak horizontal (pitch)</text>
-          <text class="pp-label" id="pvHPitch" x="130" y="26">68 mm</text>
+          <!-- top margin: sheet edge to the first row -->
+          <line class="pp-guide" x1="84" y1="70" x2="95" y2="70"></line>
+          <line class="pp-guide" x1="84" y1="90" x2="112" y2="90"></line>
+          <line class="pp-arrow" x1="80" y1="70" x2="80" y2="90" marker-start="url(#ppArrow)" marker-end="url(#ppArrow)"></line>
+          <text class="pp-label" id="pvTopMargin" x="74" y="83" text-anchor="end">Margin atas 9 mm</text>
 
-          <!-- vertical pitch: start of row1 to start of row2 (inner arrow, close to the grid) -->
-          <line class="pp-arrow" x1="270" y1="80" x2="270" y2="140" marker-start="url(#ppArrowEnd)" marker-end="url(#ppArrowEnd)"></line>
-          <text class="pp-label" id="pvVPitch" x="276" y="112" transform="rotate(90 276 112)">Pitch 38 mm</text>
+          <!-- vertical pitch: start of row 1 to start of row 2 -->
+          <line class="pp-guide" x1="84" y1="165" x2="112" y2="165"></line>
+          <line class="pp-arrow" x1="80" y1="90" x2="80" y2="165" marker-start="url(#ppArrow)" marker-end="url(#ppArrow)"></line>
+          <text class="pp-label" id="pvVPitch" x="72" y="127" text-anchor="middle" transform="rotate(-90 72 127)">Pitch vertikal 38 mm</text>
 
-          <!-- label width: inside first cell -->
-          <line class="pp-arrow" x1="110" y1="100" x2="168" y2="100" marker-start="url(#ppArrowEnd)" marker-end="url(#ppArrowEnd)"></line>
-          <text class="pp-label" id="pvWidth" x="122" y="96">Lebar 64 mm</text>
+          <!-- label width and height, measured inside the first label -->
+          <line class="pp-arrow" x1="118" y1="110" x2="201" y2="110" marker-start="url(#ppArrow)" marker-end="url(#ppArrow)"></line>
+          <text class="pp-label" id="pvWidth" x="159" y="104" text-anchor="middle">Lebar 64 mm</text>
+          <line class="pp-arrow" x1="137" y1="120" x2="137" y2="146" marker-start="url(#ppArrow)" marker-end="url(#ppArrow)"></line>
+          <text class="pp-label" id="pvHeight" x="144" y="136">Tinggi 32 mm</text>
 
-          <!-- label height: inside first cell -->
-          <line class="pp-arrow" x1="120" y1="84" x2="120" y2="126" marker-start="url(#ppArrowEnd)" marker-end="url(#ppArrowEnd)"></line>
-          <text class="pp-label" id="pvHeight" x="126" y="118" transform="rotate(90 126 118)">Tinggi 32 mm</text>
+          <!-- number across: spans every column -->
+          <line class="pp-guide" x1="112" y1="233" x2="112" y2="258"></line>
+          <line class="pp-guide" x1="313" y1="233" x2="313" y2="258"></line>
+          <line class="pp-arrow" x1="112" y1="262" x2="313" y2="262" marker-start="url(#ppArrow)" marker-end="url(#ppArrow)"></line>
+          <text class="pp-label" id="pvAcross" x="212" y="277" text-anchor="middle">Jumlah mendatar: 3</text>
 
-          <!-- number across: bottom, spanning both columns -->
-          <line class="pp-arrow" x1="106" y1="216" x2="250" y2="216" marker-start="url(#ppArrowEnd)" marker-end="url(#ppArrowEnd)"></line>
-          <text class="pp-label pp-strong" id="pvAcross" x="118" y="230">Jumlah mendatar: 3</text>
-
-          <!-- number down: right side, spanning the full grid height (outer arrow) -->
-          <line class="pp-arrow" x1="308" y1="80" x2="308" y2="190" marker-start="url(#ppArrowEnd)" marker-end="url(#ppArrowEnd)"></line>
-          <text class="pp-label pp-strong" id="pvDown" x="314" y="135" transform="rotate(90 314 135)">Jumlah menurun: 4</text>
+          <!-- number down: spans every row -->
+          <line class="pp-guide" x1="316" y1="90" x2="328" y2="90"></line>
+          <line class="pp-guide" x1="316" y1="227" x2="328" y2="227"></line>
+          <line class="pp-arrow" x1="332" y1="90" x2="332" y2="227" marker-start="url(#ppArrow)" marker-end="url(#ppArrow)"></line>
+          <text class="pp-label" id="pvDown" x="346" y="158" text-anchor="middle" transform="rotate(-90 346 158)">Jumlah menurun: 4</text>
         </svg>
       </div>
 
@@ -410,6 +424,8 @@ footer.hint-bar{
       <label class="chk" style="margin:0;"><input type="checkbox" id="trueSize"><span>Tampilkan ukuran asli (100%, sesuai fisik)</span></label>
     </div>
 
+    <div class="stage" id="stage"></div>
+
     <div class="guest-table-wrap noprint">
       <div class="guest-table-scroll">
         <table class="guests" id="guestTable">
@@ -427,8 +443,6 @@ footer.hint-bar{
         </div>
       </div>
     </div>
-
-    <div class="stage" id="stage"></div>
 
     <footer class="hint-bar noprint">Data tamu diproses sepenuhnya di peramban ini — tidak diunggah ke server mana pun.</footer>
   </main>
@@ -679,10 +693,10 @@ footer.hint-bar{
 
   function updatePaperPreview(L){
     const set = (id, text) => { const el = document.getElementById(id); if(el) el.textContent = text; };
-    set('pvSideMargins', `${L.sideMargin} mm`);
-    set('pvTopMargin', `${L.topMargin} mm`);
-    set('pvHPitch', `${L.hPitch} mm`);
-    set('pvVPitch', `Pitch ${L.vPitch} mm`);
+    set('pvSideMargins', `Margin samping ${L.sideMargin} mm`);
+    set('pvTopMargin', `Margin atas ${L.topMargin} mm`);
+    set('pvHPitch', `Pitch horizontal ${L.hPitch} mm`);
+    set('pvVPitch', `Pitch vertikal ${L.vPitch} mm`);
     set('pvWidth', `Lebar ${L.labelW} mm`);
     set('pvHeight', `Tinggi ${L.labelH} mm`);
     set('pvAcross', `Jumlah mendatar: ${L.cols}`);

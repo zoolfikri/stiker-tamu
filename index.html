@@ -153,6 +153,21 @@ footer.hint-bar{
   max-width:640px; margin:0 auto; text-align:center; color:var(--ink-soft); font-size:.78rem; line-height:1.6;
 }
 
+.paper-preview{
+  background:var(--surface); border:1px solid var(--line); border-radius:10px;
+  padding:10px 8px 6px; margin-bottom:14px;
+}
+.paper-preview .pp-title{
+  font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; font-weight:600;
+  color:var(--ink-soft); margin:0 0 6px 4px;
+}
+.paper-preview svg{display:block; width:100%; height:auto; color:var(--ink-soft);}
+.paper-preview .pp-cell{fill:var(--surface); stroke:var(--line);}
+.paper-preview .pp-backing{fill:var(--panel-2);}
+.paper-preview .pp-arrow{stroke:currentColor; stroke-width:1; fill:none;}
+.paper-preview .pp-label{fill:currentColor; font-size:8px; font-family:'Inter',sans-serif;}
+.paper-preview .pp-label.pp-strong{font-weight:600; fill:var(--ink);}
+
 @media print{
   body{background:#fff !important; margin:0 !important; min-height:0 !important;}
   html{margin:0 !important;}
@@ -267,7 +282,7 @@ footer.hint-bar{
     <div class="section">
       <div class="section-title"><span class="n">3</span>Layout Kertas Stiker</div>
       <div class="field">
-        <label>Preset ukuran</label>
+        <label>Preset label</label>
         <select id="preset">
           <option value="64x32x3x4" selected>64 × 32 mm — 3×4 (12/lembar) — Tom &amp; Jerry Label No. 103</option>
           <option value="tj-labels-103">64 × 32 mm — 3×4 (12/lembar) — TJ Labels No. 103</option>
@@ -278,30 +293,92 @@ footer.hint-bar{
           <option value="70x35x3x8">70 × 35 mm — 3×8 (24/lembar)</option>
           <option value="custom">Ukuran kustom…</option>
         </select>
+        <div class="hint">Pilih preset untuk mengisi semua kolom di bawah secara otomatis, lalu sesuaikan bila perlu — mengikuti label pada dialog "Label Details" Microsoft Word.</div>
       </div>
-      <div id="customFields" style="display:none;">
-        <div class="row2">
-          <div class="field"><label>Lebar label (mm)</label><input type="number" id="labelW" value="70" step="0.1"></div>
-          <div class="field"><label>Tinggi label (mm)</label><input type="number" id="labelH" value="42.3" step="0.1"></div>
-        </div>
-        <div class="row2">
-          <div class="field"><label>Kolom</label><input type="number" id="cols" value="3" min="1"></div>
-          <div class="field"><label>Baris</label><input type="number" id="rowsN" value="7" min="1"></div>
-        </div>
+
+      <div class="paper-preview">
+        <div class="pp-title">Preview</div>
+        <svg viewBox="0 0 340 250" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="ppArrowEnd" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+          <!-- backing sheet with 2x2 sample labels cut out -->
+          <rect class="pp-backing" x="96" y="70" width="164" height="120" rx="4"></rect>
+          <rect class="pp-cell" x="106" y="80" width="66" height="50" rx="3"></rect>
+          <rect class="pp-cell" x="184" y="80" width="66" height="50" rx="3"></rect>
+          <rect class="pp-cell" x="106" y="140" width="66" height="50" rx="3"></rect>
+          <rect class="pp-cell" x="184" y="140" width="66" height="50" rx="3"></rect>
+
+          <!-- side margins: left edge of backing to first column -->
+          <line class="pp-arrow" x1="40" y1="54" x2="104" y2="54" marker-start="url(#ppArrowEnd)" marker-end="url(#ppArrowEnd)"></line>
+          <text class="pp-label pp-strong" x="10" y="44">Margin samping</text>
+          <text class="pp-label" id="pvSideMargins" x="10" y="66">6 mm</text>
+
+          <!-- top margin: page top to first row -->
+          <line class="pp-arrow" x1="24" y1="30" x2="24" y2="78" marker-start="url(#ppArrowEnd)" marker-end="url(#ppArrowEnd)"></line>
+          <text class="pp-label pp-strong" x="2" y="24">Margin atas</text>
+          <text class="pp-label" id="pvTopMargin" x="2" y="96" transform="rotate(0)">9 mm</text>
+
+          <!-- horizontal pitch: start of col1 to start of col2 -->
+          <line class="pp-arrow" x1="106" y1="16" x2="184" y2="16" marker-start="url(#ppArrowEnd)" marker-end="url(#ppArrowEnd)"></line>
+          <text class="pp-label pp-strong" x="106" y="10">Jarak horizontal (pitch)</text>
+          <text class="pp-label" id="pvHPitch" x="130" y="26">68 mm</text>
+
+          <!-- vertical pitch: start of row1 to start of row2 (inner arrow, close to the grid) -->
+          <line class="pp-arrow" x1="270" y1="80" x2="270" y2="140" marker-start="url(#ppArrowEnd)" marker-end="url(#ppArrowEnd)"></line>
+          <text class="pp-label" id="pvVPitch" x="276" y="112" transform="rotate(90 276 112)">Pitch 38 mm</text>
+
+          <!-- label width: inside first cell -->
+          <line class="pp-arrow" x1="110" y1="100" x2="168" y2="100" marker-start="url(#ppArrowEnd)" marker-end="url(#ppArrowEnd)"></line>
+          <text class="pp-label" id="pvWidth" x="122" y="96">Lebar 64 mm</text>
+
+          <!-- label height: inside first cell -->
+          <line class="pp-arrow" x1="120" y1="84" x2="120" y2="126" marker-start="url(#ppArrowEnd)" marker-end="url(#ppArrowEnd)"></line>
+          <text class="pp-label" id="pvHeight" x="126" y="118" transform="rotate(90 126 118)">Tinggi 32 mm</text>
+
+          <!-- number across: bottom, spanning both columns -->
+          <line class="pp-arrow" x1="106" y1="216" x2="250" y2="216" marker-start="url(#ppArrowEnd)" marker-end="url(#ppArrowEnd)"></line>
+          <text class="pp-label pp-strong" id="pvAcross" x="118" y="230">Jumlah mendatar: 3</text>
+
+          <!-- number down: right side, spanning the full grid height (outer arrow) -->
+          <line class="pp-arrow" x1="308" y1="80" x2="308" y2="190" marker-start="url(#ppArrowEnd)" marker-end="url(#ppArrowEnd)"></line>
+          <text class="pp-label pp-strong" id="pvDown" x="314" y="135" transform="rotate(90 314 135)">Jumlah menurun: 4</text>
+        </svg>
+      </div>
+
+      <div class="row2">
+        <div class="field"><label>Margin atas (mm)</label><input type="number" id="topMargin" value="9" step="0.1"></div>
+        <div class="field"><label>Tinggi label (mm)</label><input type="number" id="labelH" value="32" step="0.1"></div>
       </div>
       <div class="row2">
-        <div class="field"><label>Jarak horizontal (mm)</label><input type="number" id="gapX" value="0" step="0.1"></div>
-        <div class="field"><label>Jarak vertikal (mm)</label><input type="number" id="gapY" value="0" step="0.1"></div>
+        <div class="field"><label>Margin samping (mm)</label><input type="number" id="sideMargin" value="6" step="0.1"></div>
+        <div class="field"><label>Lebar label (mm)</label><input type="number" id="labelW" value="64" step="0.1"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Jarak vertikal / pitch (mm)</label><input type="number" id="vPitch" value="38" step="0.1"></div>
+        <div class="field"><label>Jumlah mendatar</label><input type="number" id="cols" value="3" min="1"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Jarak horizontal / pitch (mm)</label><input type="number" id="hPitch" value="68" step="0.1"></div>
+        <div class="field"><label>Jumlah menurun</label><input type="number" id="rowsN" value="4" min="1"></div>
       </div>
       <div class="field">
         <label>Ukuran kertas</label>
-        <select id="pageSize">
+        <select id="pageSizePreset">
           <option value="210x297" selected>A4 (210 × 297 mm)</option>
           <option value="215.9x330.2">F4 / Folio (215,9 × 330,2 mm)</option>
           <option value="215.9x279.4">Letter (215,9 × 279,4 mm)</option>
           <option value="210x165">Lembar Label No. 103 (21,0 × 16,5 cm)</option>
+          <option value="custom">Kustom (isi manual di bawah)</option>
         </select>
       </div>
+      <div class="row2">
+        <div class="field"><label>Lebar halaman (mm)</label><input type="number" id="pageW" value="210" step="0.1"></div>
+        <div class="field"><label>Tinggi halaman (mm)</label><input type="number" id="pageH" value="165" step="0.1"></div>
+      </div>
+      <button class="btn" type="button" id="autoCenterBtn" style="width:100%; margin-bottom:12px;">Pusatkan otomatis di halaman</button>
       <div class="row2">
         <div class="field"><label>Kalibrasi offset X (mm)</label><input type="number" id="offX" value="0" step="0.1"></div>
         <div class="field"><label>Kalibrasi offset Y (mm)</label><input type="number" id="offY" value="0" step="0.1"></div>
@@ -367,14 +444,6 @@ footer.hint-bar{
   let guests = []; // {name, group, category, count, session} — matches the Excel import template's columns
   let headers = [];
   let rows = []; // raw parsed rows (array of objects keyed by header)
-  // Some presets (e.g. Tom & Jerry Label No. 103) specify exact, non-centered page
-  // margins from the manufacturer's own template — the label grid is anchored to the
-  // top-left margin, not centered on the sheet. When set, this overrides the
-  // auto-centering math below; cleared whenever the user manually edits a dimension
-  // that would invalidate the official spec (custom offsets via offX/offY still apply
-  // on top of it, for print calibration).
-  let marginOverride = null; // {ml, mt} in mm, or null to auto-center
-
   const $ = id => document.getElementById(id);
 
   // guests starts empty — import an Excel/CSV file or add guests manually.
@@ -508,16 +577,18 @@ footer.hint-bar{
   });
 
   // ---------- Layout config ----------
+  // Field model mirrors Microsoft Word's "Label Details" dialog: top margin, side
+  // margins, vertical/horizontal pitch (distance between the start of one label and
+  // the next), label width/height, number across/down, and page width/height.
   // Label No. 103's official spec (per Tom & Jerry's own Word/custom template settings):
   // label 64x32mm landscape, 3x4 grid, horizontal pitch 68mm (=64mm label + 4mm gap),
-  // vertical pitch 38mm (=32mm label + 6mm gap), on a 210x165mm sheet. The official
-  // margins are NOT centered: top margin 9mm, left margin 6mm (the grid is anchored
-  // to the page's top-left). ml/mt below encode that anchor.
+  // vertical pitch 38mm (=32mm label + 6mm gap), on a 210x165mm sheet, top margin 9mm,
+  // side margin 6mm.
   const presets = {
-    '64x32x3x4': {w:64,h:32,c:3,r:4, gx:4, gy:6, page:'210x165', ml:6, mt:9},
+    '64x32x3x4': {w:64,h:32,c:3,r:4, hPitch:68, vPitch:38, pageW:210, pageH:165, topMargin:9, sideMargin:6},
     // TJ Labels No. 103: 210x165mm sheet, 1cm top/bottom margin, 0.6cm left/right margin,
-    // horizontal pitch 6.7cm (=64mm label + 3mm gap), vertical pitch 3.8cm (=32mm label + 6mm gap).
-    'tj-labels-103': {w:64,h:32,c:3,r:4, gx:3, gy:6, page:'210x165', ml:6, mt:10},
+    // horizontal pitch 6.7cm, vertical pitch 3.8cm.
+    'tj-labels-103': {w:64,h:32,c:3,r:4, hPitch:67, vPitch:38, pageW:210, pageH:165, topMargin:10, sideMargin:6},
     '103.5x37x2x7': {w:103.5,h:37,c:2,r:7},
     '105x35x2x8': {w:105,h:35,c:2,r:8},
     '105x28.5x2x10': {w:105,h:28.5,c:2,r:10},
@@ -526,32 +597,44 @@ footer.hint-bar{
   };
   function applyPreset(p){
     $('labelW').value=p.w; $('labelH').value=p.h; $('cols').value=p.c; $('rowsN').value=p.r;
-    if(p.gx!=null) $('gapX').value=p.gx;
-    if(p.gy!=null) $('gapY').value=p.gy;
-    if(p.page){ $('pageSize').value=p.page; $('offX').value=0; $('offY').value=0; }
-    marginOverride = (p.ml!=null && p.mt!=null) ? {ml:p.ml, mt:p.mt} : null;
+    $('hPitch').value = p.hPitch!=null ? p.hPitch : p.w;
+    $('vPitch').value = p.vPitch!=null ? p.vPitch : p.h;
+    if(p.pageW!=null && p.pageH!=null){ $('pageW').value=p.pageW; $('pageH').value=p.pageH; $('offX').value=0; $('offY').value=0; }
+    if(p.topMargin!=null && p.sideMargin!=null){
+      $('topMargin').value=p.topMargin; $('sideMargin').value=p.sideMargin;
+    } else {
+      autoCenterMargins();
+    }
   }
+  // Centers the label grid on the current page size — used as the fallback for
+  // presets without an official manufacturer margin, and available as a manual button.
+  function autoCenterMargins(){
+    const labelW = parseFloat($('labelW').value)||0, labelH = parseFloat($('labelH').value)||0;
+    const cols = Math.max(1, parseInt($('cols').value)||1), rowsN = Math.max(1, parseInt($('rowsN').value)||1);
+    const hPitch = parseFloat($('hPitch').value)||labelW, vPitch = parseFloat($('vPitch').value)||labelH;
+    const pageW = parseFloat($('pageW').value)||0, pageH = parseFloat($('pageH').value)||0;
+    const gridW = (cols-1)*hPitch + labelW, gridH = (rowsN-1)*vPitch + labelH;
+    $('sideMargin').value = Math.max(0, (pageW-gridW)/2).toFixed(1);
+    $('topMargin').value = Math.max(0, (pageH-gridH)/2).toFixed(1);
+  }
+  $('autoCenterBtn').addEventListener('click', ()=>{ autoCenterMargins(); render(); });
   $('preset').addEventListener('change', ()=>{
     const v = $('preset').value;
-    $('customFields').style.display = v==='custom' ? 'block' : 'none';
-    if(v!=='custom'){ applyPreset(presets[v]); }
-    else { marginOverride = null; }
+    if(v!=='custom'){ applyPreset(presets[v]); render(); }
+  });
+  $('pageSizePreset').addEventListener('change', ()=>{
+    const v = $('pageSizePreset').value;
+    if(v==='custom') return;
+    const [w,h] = v.split('x').map(Number);
+    $('pageW').value = w; $('pageH').value = h;
     render();
   });
-  // Editing a dimension by hand invalidates any official-spec margin anchor (it no
-  // longer matches the manufacturer's numbers), so we fall back to auto-centering.
-  // offX/offY are the deliberate exception — they're the calibration nudge meant to
-  // apply on top of whichever base margin (anchored or centered) is active.
-  const OVERRIDE_INVALIDATING_FIELDS = ['labelW','labelH','cols','rowsN','gapX','gapY','pageSize'];
-  ['labelW','labelH','cols','rowsN','gapX','gapY','pageSize','offX','offY'].forEach(id=>{
-    const handler = ()=>{
-      if(OVERRIDE_INVALIDATING_FIELDS.includes(id)) marginOverride = null;
-      render();
-    };
+  ['topMargin','sideMargin','vPitch','hPitch','labelW','labelH','cols','rowsN','pageW','pageH','offX','offY'].forEach(id=>{
+    const handler = ()=>render();
     $(id).addEventListener('input', handler);
     $(id).addEventListener('change', handler);
   });
-  // init custom fields from default preset
+  // init fields from default preset
   (function initPreset(){ const p = presets[$('preset').value]; if(p){ applyPreset(p); } })();
 
   // ---------- Text template controls ----------
@@ -568,24 +651,49 @@ footer.hint-bar{
   syncFieldVisibility();
   $('trueSize').addEventListener('change', render);
 
-  // ---------- Rendering the print stage ----------
-  function render(){
-    const pageDims = $('pageSize').value.split('x').map(Number);
-    const pageW = pageDims[0], pageH = pageDims[1];
+  // ---------- Shared layout math (screen preview, print CSS, and PDF export all read this) ----------
+  function getLayoutConfig(){
+    const pageW = parseFloat($('pageW').value)||210;
+    const pageH = parseFloat($('pageH').value)||297;
     const labelW = parseFloat($('labelW').value)||70;
     const labelH = parseFloat($('labelH').value)||42.3;
     const cols = Math.max(1, parseInt($('cols').value)||1);
     const rowsN = Math.max(1, parseInt($('rowsN').value)||1);
-    const gapX = parseFloat($('gapX').value)||0;
-    const gapY = parseFloat($('gapY').value)||0;
+    const hPitch = parseFloat($('hPitch').value)||labelW;
+    const vPitch = parseFloat($('vPitch').value)||labelH;
+    const topMargin = parseFloat($('topMargin').value)||0;
+    const sideMargin = parseFloat($('sideMargin').value)||0;
     const offX = parseFloat($('offX').value)||0;
     const offY = parseFloat($('offY').value)||0;
     const perPage = cols*rowsN;
+    // CSS grid gap can't go negative (pitch smaller than the label itself is a
+    // nonsensical/overlapping setup) — clamp defensively so layout never breaks.
+    const gapX = Math.max(0, hPitch-labelW);
+    const gapY = Math.max(0, vPitch-labelH);
+    const gridW = (cols-1)*hPitch + labelW;
+    const gridH = (rowsN-1)*vPitch + labelH;
+    const marginLeft = sideMargin + offX;
+    const marginTop = topMargin + offY;
+    return {pageW,pageH,labelW,labelH,cols,rowsN,hPitch,vPitch,topMargin,sideMargin,gapX,gapY,gridW,gridH,perPage,marginLeft,marginTop};
+  }
 
-    const gridW = cols*labelW + (cols-1)*gapX;
-    const gridH = rowsN*labelH + (rowsN-1)*gapY;
-    const marginLeft = (marginOverride ? marginOverride.ml : Math.max(0,(pageW-gridW)/2)) + offX;
-    const marginTop = (marginOverride ? marginOverride.mt : Math.max(0,(pageH-gridH)/2)) + offY;
+  function updatePaperPreview(L){
+    const set = (id, text) => { const el = document.getElementById(id); if(el) el.textContent = text; };
+    set('pvSideMargins', `${L.sideMargin} mm`);
+    set('pvTopMargin', `${L.topMargin} mm`);
+    set('pvHPitch', `${L.hPitch} mm`);
+    set('pvVPitch', `Pitch ${L.vPitch} mm`);
+    set('pvWidth', `Lebar ${L.labelW} mm`);
+    set('pvHeight', `Tinggi ${L.labelH} mm`);
+    set('pvAcross', `Jumlah mendatar: ${L.cols}`);
+    set('pvDown', `Jumlah menurun: ${L.rowsN}`);
+  }
+
+  // ---------- Rendering the print stage ----------
+  function render(){
+    const L = getLayoutConfig();
+    const {pageW, pageH, labelW, labelH, cols, rowsN, gapX, gapY, perPage, marginLeft, marginTop} = L;
+    updatePaperPreview(L);
 
     // stats
     $('statGuests').textContent = guests.length;
@@ -728,21 +836,7 @@ footer.hint-bar{
   });
 
   function preparePrintSizes(showBorders){
-    const pageDims = $('pageSize').value.split('x').map(Number);
-    const pageW = pageDims[0], pageH = pageDims[1];
-    const labelW = parseFloat($('labelW').value)||70;
-    const labelH = parseFloat($('labelH').value)||42.3;
-    const cols = Math.max(1, parseInt($('cols').value)||1);
-    const rowsN = Math.max(1, parseInt($('rowsN').value)||1);
-    const gapX = parseFloat($('gapX').value)||0;
-    const gapY = parseFloat($('gapY').value)||0;
-    const offX = parseFloat($('offX').value)||0;
-    const offY = parseFloat($('offY').value)||0;
-    const perPage = cols*rowsN;
-    const gridW = cols*labelW + (cols-1)*gapX;
-    const gridH = rowsN*labelH + (rowsN-1)*gapY;
-    const marginLeft = (marginOverride ? marginOverride.ml : Math.max(0,(pageW-gridW)/2)) + offX;
-    const marginTop = (marginOverride ? marginOverride.mt : Math.max(0,(pageH-gridH)/2)) + offY;
+    const {pageW, pageH, labelW, labelH, cols, rowsN, gapX, gapY, marginLeft, marginTop} = getLayoutConfig();
 
     let styleTag = document.getElementById('printSizeStyle');
     if(!styleTag){ styleTag = document.createElement('style'); styleTag.id='printSizeStyle'; document.head.appendChild(styleTag); }
@@ -768,22 +862,7 @@ footer.hint-bar{
   // and only offers a fixed list like A4/Letter). Vector text, not a rasterized image. ----------
   const MM_PER_PT = 2.834645669; // 1pt = 1/72in, 1in = 25.4mm
   function buildLayoutForPdf(){
-    const pageDims = $('pageSize').value.split('x').map(Number);
-    const pageW = pageDims[0], pageH = pageDims[1];
-    const labelW = parseFloat($('labelW').value)||70;
-    const labelH = parseFloat($('labelH').value)||42.3;
-    const cols = Math.max(1, parseInt($('cols').value)||1);
-    const rowsN = Math.max(1, parseInt($('rowsN').value)||1);
-    const gapX = parseFloat($('gapX').value)||0;
-    const gapY = parseFloat($('gapY').value)||0;
-    const offX = parseFloat($('offX').value)||0;
-    const offY = parseFloat($('offY').value)||0;
-    const perPage = cols*rowsN;
-    const gridW = cols*labelW + (cols-1)*gapX;
-    const gridH = rowsN*labelH + (rowsN-1)*gapY;
-    const marginLeft = (marginOverride ? marginOverride.ml : Math.max(0,(pageW-gridW)/2)) + offX;
-    const marginTop = (marginOverride ? marginOverride.mt : Math.max(0,(pageH-gridH)/2)) + offY;
-    return {pageW,pageH,labelW,labelH,cols,rowsN,gapX,gapY,perPage,marginLeft,marginTop};
+    return getLayoutConfig();
   }
   function drawStickerCellPdf(doc, g, cellX, cellY, labelW, labelH, opts, showBorder){
     if(showBorder){
@@ -838,8 +917,8 @@ footer.hint-bar{
       const pageGuests = list.slice(p*L.perPage, p*L.perPage+L.perPage);
       for(let i=0;i<L.perPage;i++){
         const col = i % L.cols, row = Math.floor(i / L.cols);
-        const cellX = L.marginLeft + col*(L.labelW + L.gapX);
-        const cellY = L.marginTop + row*(L.labelH + L.gapY);
+        const cellX = L.marginLeft + col*L.hPitch;
+        const cellY = L.marginTop + row*L.vPitch;
         drawStickerCellPdf(doc, pageGuests[i], cellX, cellY, L.labelW, L.labelH, opts, showBorders);
       }
     }

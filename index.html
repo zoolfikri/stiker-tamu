@@ -14,6 +14,7 @@
   --line:#E4E4E7; --panel:#F4F4F5; --panel-2:#ECECEE; --surface:#FFFFFF;
   --sheet:#ffffff; --sheet-shadow: 0 1px 2px rgba(24,24,27,.05), 0 8px 20px -10px rgba(24,24,27,.18);
   --danger:#DC2626;
+  --test:#FF1E56; --test-tint:rgba(255,30,86,.10); --test-line:rgba(255,30,86,.35);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -133,6 +134,12 @@ textarea{resize:vertical; min-height:44px;}
   margin-top:14px; padding-top:14px; border-top:1px solid var(--line);
 }
 .pb-buttons{display:flex; gap:8px; flex-wrap:wrap;}
+/* Test mode prints random names, so it stays visibly flagged while it's on. */
+.chk-test input{accent-color:var(--test);}
+.test-banner{
+  margin-top:12px; padding:9px 12px; border-radius:8px; font-size:.78rem; line-height:1.5;
+  background:var(--test-tint); border:1px solid var(--test-line); color:var(--ink);
+}
 .btn-icon{gap:9px; padding:9px 13px;}
 .btn-icon .bars{
   width:16px; height:12px; flex:0 0 16px; position:relative; display:inline-block;
@@ -199,6 +206,7 @@ table.guests td.act{width:34px; text-align:center;}
 .sticker .line2{font-family:'Inter',sans-serif; font-weight:700; line-height:1.15; letter-spacing:-.01em;}
 .sticker .line3{font-family:'Inter',sans-serif; opacity:.6;}
 .sticker.empty{border-style:dashed; opacity:.3;}
+.stage.test-mode .sticker{border-color:var(--test);}
 
 footer.hint-bar{
   max-width:640px; margin:0 auto; text-align:center; color:var(--ink-soft); font-size:.78rem; line-height:1.6;
@@ -464,6 +472,10 @@ footer.hint-bar p:last-child{margin-bottom:0;}
           <p id="scaleInfo">Diskalakan agar muat di layar — proporsi lebar dan tinggi kertas tetap sesuai aslinya.</p>
         </div>
         <label class="chk" style="margin:0;"><input type="checkbox" id="trueSize"><span>Ukuran asli (100%)</span></label>
+        <label class="chk chk-test" style="margin:0;"><input type="checkbox" id="testMode"><span>Mode uji coba</span></label>
+      </div>
+      <div class="test-banner" id="testBanner" hidden>
+        <strong>Mode uji coba aktif.</strong> Lembar diisi nama acak dan garis tepi tiap label — daftar tamu Anda tidak berubah. Matikan mode ini sebelum mencetak stiker asli.
       </div>
       <div class="pb-actions">
         <div class="stat-row">
@@ -474,7 +486,6 @@ footer.hint-bar p:last-child{margin-bottom:0;}
         <div class="pb-buttons">
           <button class="btn btn-primary" id="printBtn">Cetak stiker</button>
           <button class="btn" id="downloadPdfBtn">Unduh PDF</button>
-          <button class="btn" id="printTestBtn">Cetak uji coba</button>
         </div>
       </div>
     </div>
@@ -553,7 +564,7 @@ footer.hint-bar p:last-child{margin-bottom:0;}
     </section>
 
     <footer class="hint-bar noprint">
-      <p><strong>Cetak uji coba</strong> mengisi satu lembar penuh dengan nama acak dan menampilkan garis tepi tiap label, tanpa mengubah daftar tamu Anda — cocok untuk cek posisi sebelum pakai kertas stiker asli.</p>
+      <p>Aktifkan <strong>Mode uji coba</strong> untuk mengisi satu lembar penuh dengan nama acak dan menampilkan garis tepi tiap label, tanpa mengubah daftar tamu Anda — cocok untuk cek posisi di kertas biasa sebelum pakai kertas stiker asli. Cetak atau unduh PDF seperti biasa, lalu matikan mode ini.</p>
       <p>Tombol Cetak tidak merespons, atau ukuran kertas di dialog cetak tidak sesuai (sering terjadi di HP Android)? Gunakan tombol <strong>Unduh PDF</strong> — ukurannya presisi di perangkat apa pun, lalu cetak file PDF tersebut dari aplikasi/printer Anda.</p>
       <p>Data tamu diproses sepenuhnya di peramban ini — tidak diunggah ke server mana pun.</p>
     </footer>
@@ -576,6 +587,16 @@ footer.hint-bar p:last-child{margin-bottom:0;}
   // a fresh block instead of overwriting rows the user has since changed.
   let importedRange = null; // {start, count}
   const forgetImportedRange = () => { importedRange = null; };
+  // Test mode renders a throwaway list instead of `guests`, so the real list — and the
+  // guest table showing it — are never touched by trial prints.
+  let testMode = false;
+  let testGuests = [];
+  function activeGuests(perPage){
+    if(!testMode) return guests;
+    // always exactly one full sheet, regenerated when the grid size changes
+    if(testGuests.length !== perPage) testGuests = generateRandomGuests(perPage);
+    return testGuests;
+  }
   const $ = id => document.getElementById(id);
 
   // guests starts empty — import an Excel/CSV file or add guests manually.
@@ -895,10 +916,12 @@ footer.hint-bar p:last-child{margin-bottom:0;}
     updatePaperPreview(L);
     syncPageSizePreset(L);
 
+    const list = activeGuests(perPage);
+
     // stats
-    $('statGuests').textContent = guests.length;
+    $('statGuests').textContent = list.length;
     $('statPerPage').textContent = perPage;
-    const pageCount = guests.length ? Math.ceil(guests.length/perPage) : 1;
+    const pageCount = list.length ? Math.ceil(list.length/perPage) : 1;
     $('statPages').textContent = pageCount;
 
     // screen scale: fit page width to the available viewing space (responsive),
@@ -926,8 +949,8 @@ footer.hint-bar p:last-child{margin-bottom:0;}
 
     const stage = $('stage');
     stage.innerHTML = '';
+    stage.classList.toggle('test-mode', testMode);
 
-    const list = guests.length ? guests : [];
     const totalPages = list.length ? pageCount : 1;
 
     for(let p=0; p<totalPages; p++){
@@ -994,12 +1017,13 @@ footer.hint-bar p:last-child{margin-bottom:0;}
   }
   $('printBtn').addEventListener('click', ()=>{
     if(!canPrint()) return;
-    preparePrintSizes(false);
+    preparePrintSizes(testMode); // test mode prints the label borders too
     window.print();
   });
   window.addEventListener('afterprint', render); // restore screen-scaled preview
 
-  // ---------- Test print: fill one full sheet with random names + visible label borders ----------
+  // ---------- Test mode: fills one full sheet with random names and shows each label's
+  // border, so a trial sheet can be printed without touching the real guest list. ----------
   const TEST_FIRST_NAMES = ['Budi','Siti','Andi','Rina','Dedi','Sri','Agus','Nur','Eko','Wati',
     'Hendra','Lina','Fajar','Dewi','Rio','Putri','Bayu','Ayu','Yusuf','Indah',
     'Arif','Rahma','Doni','Sinta','Wawan','Yuni','Irfan','Melati','Adi','Tika'];
@@ -1020,21 +1044,11 @@ footer.hint-bar p:last-child{margin-bottom:0;}
     }
     return out;
   }
-  $('printTestBtn').addEventListener('click', ()=>{
-    if(!canPrint()) return;
-    const cols = Math.max(1, parseInt($('cols').value)||1);
-    const rowsN = Math.max(1, parseInt($('rowsN').value)||1);
-    const perPage = cols*rowsN;
-    const backup = guests;
-    guests = generateRandomGuests(perPage); // guest table itself is left untouched
+  $('testMode').addEventListener('change', e=>{
+    testMode = e.target.checked;
+    testGuests = []; // fresh names each time the mode is switched on
+    $('testBanner').hidden = !testMode;
     render();
-    preparePrintSizes(true);
-    window.print();
-    window.addEventListener('afterprint', function restoreAfterTest(){
-      window.removeEventListener('afterprint', restoreAfterTest);
-      guests = backup;
-      render();
-    }, {once:true});
   });
 
   function preparePrintSizes(showBorders){
@@ -1126,11 +1140,12 @@ footer.hint-bar p:last-child{margin-bottom:0;}
         drawStickerCellPdf(doc, pageGuests[i], cellX, cellY, L.labelW, L.labelH, opts, showBorders);
       }
     }
-    doc.save('stiker-tamu.pdf');
+    doc.save(showBorders ? 'stiker-tamu-uji-coba.pdf' : 'stiker-tamu.pdf');
   }
   $('downloadPdfBtn').addEventListener('click', ()=>{
-    if(!guests.length){ alert('Belum ada tamu untuk dicetak. Impor file atau tambahkan tamu manual dulu.'); return; }
-    generatePdf(guests, false);
+    const list = activeGuests(getLayoutConfig().perPage);
+    if(!list.length){ alert('Belum ada tamu untuk dicetak. Impor file atau tambahkan tamu manual dulu.'); return; }
+    generatePdf(list, testMode);
   });
 
   // ---------- responsive: re-fit preview on viewport/orientation changes ----------

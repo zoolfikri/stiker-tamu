@@ -1014,7 +1014,9 @@ footer.hint-bar{
   // ---------- Download PDF: exact mm sizing, generated in-browser (bypasses OS print
   // dialogs — needed because Android's native print pipeline ignores our @page CSS size
   // and only offers a fixed list like A4/Letter). Vector text, not a rasterized image. ----------
-  const MM_PER_PT = 2.834645669; // 1pt = 1/72in, 1in = 25.4mm
+  // jsPDF takes coordinates in the document unit (mm here) but setFontSize is always
+  // in points, so font sizes — and only those — need converting.
+  const PT_PER_MM = 2.834645669; // 1in = 25.4mm = 72pt
   function buildLayoutForPdf(){
     return getLayoutConfig();
   }
@@ -1041,7 +1043,7 @@ footer.hint-bar{
     lines.forEach((l,i)=>{
       const lh = lineHeightsMm[i];
       y += lh;
-      doc.setFontSize(l.sizeMm / MM_PER_PT);
+      doc.setFontSize(l.sizeMm * PT_PER_MM);
       doc.setFont('helvetica', l.style);
       // baseline sits near the bottom of the line box, roughly 80% down
       doc.text(String(l.text), cx, y - lh*0.22, {align:'center', baseline:'alphabetic'});

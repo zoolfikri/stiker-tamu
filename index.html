@@ -154,10 +154,12 @@ footer.hint-bar{
 }
 
 @media print{
-  body{background:#fff !important;}
+  body{background:#fff !important; margin:0 !important; min-height:0 !important;}
+  html{margin:0 !important;}
+  .app{min-height:0 !important;}
   .rail, .main-head, .guest-table-wrap, footer.hint-bar, .noprint{display:none !important;}
   .app{display:block;}
-  .main{padding:0; overflow:visible;}
+  .main{display:contents !important;}
   .stage{gap:0; align-items:flex-start;}
   .sheet{box-shadow:none !important; margin:0 !important; page-break-after:always;}
   .sheet:last-child{page-break-after:auto;}
@@ -743,7 +745,7 @@ footer.hint-bar{
     styleTag.textContent = `
       @page{ size:${pageW}mm ${pageH}mm; margin:0; }
       @media print{
-        .sheet{ width:${pageW}mm !important; height:${pageH}mm !important; }
+        .sheet{ width:calc(${pageW}mm - 0.5mm) !important; height:calc(${pageH}mm - 0.5mm) !important; }
         .label-grid{
           left:${marginLeft}mm !important; top:${marginTop}mm !important;
           grid-template-columns: repeat(${cols}, ${labelW}mm) !important;

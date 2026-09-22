@@ -348,7 +348,7 @@ footer.hint-bar p:last-child{margin-bottom:0;}
         <div><span class="t">Format Teks Stiker</span><span class="s">Baris pembuka, gelar, dan keterangan</span></div>
       </div>
       <div class="step-body">
-      <div class="chk"><input type="checkbox" id="showPrefix" checked><label for="showPrefix">Tampilkan baris pembuka</label></div>
+      <div class="chk"><input type="checkbox" id="showPrefix"><label for="showPrefix">Tampilkan baris pembuka</label></div>
       <div class="field" id="prefixField">
         <input type="text" id="prefixText" value="Kepada Yth.">
       </div>
@@ -606,9 +606,9 @@ footer.hint-bar p:last-child{margin-bottom:0;}
   const MM_PER_PX_SCALE = 3.78; // for on-screen 1mm≈3.78px baseline before stage scaling
   // Font size as a fraction of label height, shared by the on-screen render and the print CSS
   // so they can never drift apart. Name line kept modest so it doesn't dominate small labels.
-  const FONT_RATIO = {prefix: 0.13, name: 0.20, note: 0.12};
+  const FONT_RATIO = {prefix: 0.13, name: 0.14, note: 0.12};
   let currentScale = 1; // recomputed each render(), reused by clampFont for consistent sizing
-  let guests = []; // {name, group, category, count, session} — matches the Excel import template's columns
+  let guests = [{"name": "Mas Arfan Arlanda & Keluarga", "group": "Nawatech", "category": "VIP", "count": 2, "session": ""}, {"name": "Mas Sudono Salim & Keluarga", "group": "Jejakin", "category": "VIP", "count": 2, "session": ""}, {"name": "Mas Andreas Djingga & Keluarga", "group": "Jejakin", "category": "VIP", "count": 2, "session": ""}, {"name": "Mba Fainta Negoro & Keluarga", "group": "Jejakin", "category": "VIP", "count": 2, "session": ""}, {"name": "Mas Haris Iskandar & Keluarga", "group": "Jejakin", "category": "VIP", "count": 2, "session": ""}, {"name": "Mas Bogar Baskoro", "group": "Jejakin", "category": "VIP", "count": 2, "session": ""}, {"name": "Mas Nur Cholis & Keluarga", "group": "Jejakin", "category": "VIP", "count": 2, "session": ""}, {"name": "Mas Rifki Syabani & Keluarga", "group": "Jejakin", "category": "VIP", "count": 2, "session": ""}, {"name": "Mas Fazar Susanto & Keluarga", "group": "Nawatech", "category": "VIP", "count": 2, "session": ""}, {"name": "Mas Fauzan Salam & Keluarga", "group": "Nawatech", "category": "VIP", "count": 2, "session": ""}, {"name": "Mas Joe Wongkar & Keluarga", "group": "Nawatech", "category": "VIP", "count": 2, "session": ""}, {"name": "Mas Rafeequl & Keluarga", "group": "Nawatech", "category": "VIP", "count": 2, "session": ""}, {"name": "Mas Ervin & Keluarga", "group": "Nawatech", "category": "VIP", "count": 2, "session": ""}, {"name": "Mas Derry & Keluarga", "group": "Nawatech", "category": "VIP", "count": 2, "session": ""}, {"name": "Matin & Keluarga", "group": "Nawatech", "category": "VIP", "count": 2, "session": ""}, {"name": "Rifki Maulana & Pasangan", "group": "Nawatech", "category": "VIP", "count": 2, "session": ""}, {"name": "Mas Dewa & Keluarga", "group": "Nawatech", "category": "VIP", "count": 2, "session": ""}, {"name": "Venantius Galih & Pasangan", "group": "Nawatech", "category": "VIP", "count": 2, "session": ""}, {"name": "Erlangga & Istri", "group": "Nawatech", "category": "VIP", "count": 2, "session": ""}, {"name": "Mas Diki & Pasangan", "group": "Nawatech", "category": "VIP", "count": 2, "session": ""}, {"name": "Mas Ricky", "group": "Nawatech", "category": "VIP", "count": 2, "session": ""}, {"name": "Mas Daris Ali", "group": "Nawatech", "category": "VIP", "count": 2, "session": ""}, {"name": "Ko Wilson & Keluarga", "group": "Nawatech", "category": "VIP", "count": 2, "session": ""}, {"name": "Ci Leony & Keluarga", "group": "Nawatech", "category": "VIP", "count": 2, "session": ""}, {"name": "Ko Felix & Ci Charoline", "group": "Aldino", "category": "VIP", "count": 2, "session": ""}, {"name": "Ko Peter & Keluarga", "group": "Aldino", "category": "VIP", "count": 2, "session": ""}, {"name": "CSR Telkomsel", "group": "Jejakin", "category": "VIP", "count": 2, "session": ""}]; // {name, group, category, count, session} — matches the Excel import template's columns; default-seeded from Tamu Undangan Cetak.xlsx
   let headers = [];
   let rows = []; // raw parsed rows (array of objects keyed by header)
   // Slice of guests[] contributed by the file currently loaded in the import panel, so a
@@ -628,8 +628,6 @@ footer.hint-bar p:last-child{margin-bottom:0;}
     return testGuests;
   }
   const $ = id => document.getElementById(id);
-
-  // guests starts empty — import an Excel/CSV file or add guests manually.
 
   // ---------- File import ----------
   const dropzone = $('dropzone'), fileInput = $('fileInput');

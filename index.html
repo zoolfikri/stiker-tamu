@@ -1111,6 +1111,30 @@ footer.hint-bar p:last-child{margin-bottom:0;}
   function buildLayoutForPdf(){
     return getLayoutConfig();
   }
+  // A name/prefix/note that's wider than the label has nothing stopping it in jsPDF —
+  // unlike the CSS-rendered preview and print path (which clip it via overflow:hidden),
+  // doc.text() just draws past the label's edges and, for a cell near the sheet's own
+  // edge, past the page boundary too. Shrink the line to fit, then fall back to
+  // truncating with an ellipsis if it still doesn't fit at the smallest readable size.
+  function fitTextPdf(doc, text, sizeMm, style, maxWidthMm){
+    const MIN_RATIO = 0.55; // never shrink past this fraction of the label's intended size
+    doc.setFont('helvetica', style);
+    doc.setFontSize(sizeMm * PT_PER_MM);
+    let w = doc.getTextWidth(text);
+    if(w <= maxWidthMm) return {text, sizeMm};
+    const minSizeMm = sizeMm * MIN_RATIO;
+    sizeMm = Math.max(minSizeMm, sizeMm * (maxWidthMm / w));
+    doc.setFontSize(sizeMm * PT_PER_MM);
+    w = doc.getTextWidth(text);
+    if(w <= maxWidthMm) return {text, sizeMm};
+    // "…" (U+2026) silently vanishes when drawn with jsPDF's standard, non-embedded
+    // Helvetica — it isn't in that font's WinAnsi encoding. "..." is.
+    const ELLIPSIS = '...';
+    while(text.length > 1 && doc.getTextWidth(text + ELLIPSIS) > maxWidthMm){
+      text = text.slice(0, -1);
+    }
+    return {text: text + ELLIPSIS, sizeMm};
+  }
   function drawStickerCellPdf(doc, g, cellX, cellY, labelW, labelH, opts, showBorder){
     if(showBorder){
       doc.setDrawColor(255,30,86); // bright pink-red, easy to see against white sticker paper
@@ -1126,18 +1150,25 @@ footer.hint-bar p:last-child{margin-bottom:0;}
     lines.push({text: nameLine, sizeMm: labelH*FONT_RATIO.name, style:'bold'});
     if(showNote && note) lines.push({text: note, sizeMm: labelH*FONT_RATIO.note, style:'normal'});
 
+    // matches the sticker's own 2mm CSS padding on each side
+    const maxWidthMm = Math.max(4, labelW - 4);
+    doc.setFont('helvetica');
+    lines.forEach(l=>{
+      const fit = fitTextPdf(doc, String(l.text), l.sizeMm, l.style, maxWidthMm);
+      l.text = fit.text; l.sizeMm = fit.sizeMm;
+    });
+
     const lineHeightsMm = lines.map(l=>l.sizeMm*1.25);
     const totalH = lineHeightsMm.reduce((a,b)=>a+b,0);
     let y = cellY + (labelH - totalH)/2;
     const cx = cellX + labelW/2;
-    doc.setFont('helvetica');
     lines.forEach((l,i)=>{
       const lh = lineHeightsMm[i];
       y += lh;
       doc.setFontSize(l.sizeMm * PT_PER_MM);
       doc.setFont('helvetica', l.style);
       // baseline sits near the bottom of the line box, roughly 80% down
-      doc.text(String(l.text), cx, y - lh*0.22, {align:'center', baseline:'alphabetic'});
+      doc.text(l.text, cx, y - lh*0.22, {align:'center', baseline:'alphabetic'});
     });
   }
   function generatePdf(listOverride, showBorders){

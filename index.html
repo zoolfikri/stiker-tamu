@@ -31,6 +31,11 @@
   --danger:#F87171;
 }
 *{box-sizing:border-box;}
+.icon-sprite{display:none;}
+.ico{
+  width:1.05em; height:1.05em; flex:0 0 auto; vertical-align:-.15em;
+  fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
+}
 body{
   background:var(--paper); color:var(--ink);
   font-family:'Inter',system-ui,-apple-system,sans-serif;
@@ -73,7 +78,9 @@ h1,h2{font-family:'Inter',system-ui,sans-serif; letter-spacing:-.02em;}
 }
 .dropzone:hover, .dropzone.drag{border-color:var(--accent); background:var(--panel-2);}
 .dropzone input{display:none;}
-.dropzone .ic{font-size:1.4rem; display:block; margin-bottom:6px;}
+.dropzone .ic{display:block; margin-bottom:8px; color:var(--ink-soft); line-height:0;}
+.dropzone .ic .ico{width:26px; height:26px; stroke-width:1.75;}
+.dropzone:hover .ic, .dropzone.drag .ic{color:var(--accent);}
 .dropzone .t1{display:block; font-size:.85rem; font-weight:600;}
 .dropzone .t2{display:block; font-size:.75rem; color:var(--ink-soft); margin-top:4px;}
 .file-chip{
@@ -81,7 +88,9 @@ h1,h2{font-family:'Inter',system-ui,sans-serif; letter-spacing:-.02em;}
   border-radius:8px; padding:8px 10px; font-size:.8rem; margin-top:10px;
 }
 .file-chip .fname{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500;}
-.file-chip button{background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:.95rem; padding:2px;}
+.file-chip button{background:none; border:none; color:var(--ink-soft); cursor:pointer; padding:2px;
+  display:inline-flex; align-items:center; border-radius:5px;}
+.file-chip button:hover{color:var(--danger);}
 .field{margin-bottom:12px;}
 .field label{display:block; font-size:.78rem; font-weight:600; margin-bottom:5px; color:var(--ink);}
 .field .hint{font-size:.72rem; color:var(--ink-soft); margin-top:4px; line-height:1.4;}
@@ -94,6 +103,7 @@ textarea{resize:vertical; min-height:44px;}
 .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
 .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
 .chk{display:flex; align-items:center; gap:8px; font-size:.83rem; margin-bottom:8px; cursor:pointer;}
+.chk span{display:inline-flex; align-items:center; gap:6px;}
 .chk input{width:15px; height:15px; accent-color:var(--accent);}
 .stat-row{display:flex; gap:10px; margin-top:4px;}
 .stat{
@@ -113,6 +123,8 @@ textarea{resize:vertical; min-height:44px;}
 .btn-primary{background:var(--accent); border-color:var(--accent); color:#fff; padding:11px 18px; font-size:.9rem;}
 .btn-primary:hover{background:var(--accent-soft); border-color:var(--accent-soft);}
 .btn-ghost{background:none; border:none; color:var(--ink-soft); padding:4px 6px; font-weight:500;}
+.btn-del{display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; padding:0; border-radius:6px; cursor:pointer;}
+.btn-del:hover{color:var(--danger); background:var(--panel-2);}
 .btn-ghost:hover{color:var(--accent);}
 .btn-sm{padding:7px 11px; font-size:.78rem;}
 .btn-accent{background:var(--accent); border-color:var(--accent); color:#fff;}
@@ -136,19 +148,13 @@ textarea{resize:vertical; min-height:44px;}
 .pb-buttons{display:flex; gap:8px; flex-wrap:wrap;}
 /* Test mode prints random names, so it stays visibly flagged while it's on. */
 .chk-test input{accent-color:var(--test);}
+.test-banner .ico{margin-top:2px; color:var(--test);}
 .test-banner{
+  display:flex; align-items:flex-start; gap:9px;
   margin-top:12px; padding:9px 12px; border-radius:8px; font-size:.78rem; line-height:1.5;
   background:var(--test-tint); border:1px solid var(--test-line); color:var(--ink);
 }
 .btn-icon{gap:9px; padding:9px 13px;}
-.btn-icon .bars{
-  width:16px; height:12px; flex:0 0 16px; position:relative; display:inline-block;
-  border-top:2px solid currentColor; border-bottom:2px solid currentColor;
-}
-.btn-icon .bars::after{
-  content:""; position:absolute; left:0; right:0; top:50%; transform:translateY(-1px);
-  border-top:2px solid currentColor;
-}
 .guest-panel{
   background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden;
   margin:36px 0 32px; box-shadow:var(--sheet-shadow);
@@ -157,7 +163,7 @@ textarea{resize:vertical; min-height:44px;}
   display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
   padding:14px 16px; border-bottom:1px solid var(--line); background:var(--panel);
 }
-.panel-head h2{margin:0; font-size:1rem; font-weight:700;}
+.panel-head h2{margin:0; font-size:1rem; font-weight:700; display:flex; align-items:center; gap:8px;}
 .panel-head .sub{margin:2px 0 0; font-size:.78rem; color:var(--ink-soft);}
 .panel-actions{display:flex; gap:8px; flex-wrap:wrap;}
 .import-bar{display:grid; grid-template-columns:1.25fr 1fr; gap:12px; padding:16px;}
@@ -168,6 +174,7 @@ textarea{resize:vertical; min-height:44px;}
 .import-extra{padding:0 16px 12px;}
 .add-row-bar{border-top:1px solid var(--line);}
 .add-row-bar button{
+  display:flex; align-items:center; justify-content:center; gap:7px;
   width:100%; border:none; background:none; color:var(--accent); font-weight:600; font-size:.85rem;
   padding:13px; cursor:pointer; font-family:inherit;
 }
@@ -305,6 +312,23 @@ footer.hint-bar p:last-child{margin-bottom:0;}
 </style>
 </head>
 <body>
+
+<!-- Lucide icons (lucide-static v1.47.0, ISC) inlined as a sprite: this app has to keep
+     working when the CDNs it loads are blocked, so icons must not depend on one. -->
+<svg class="icon-sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></symbol>
+  <symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.453 15h11.094"/><path d="M8.5 2h7"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></symbol>
+  <symbol id="i-user-plus" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></symbol>
+  <symbol id="i-sheet" viewBox="0 0 24 24"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M8 13h2"/><path d="M14 13h2"/><path d="M8 17h2"/><path d="M14 17h2"/></symbol>
+  <symbol id="i-filetext" viewBox="0 0 24 24"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+</svg>
 
 
 <div class="app">
@@ -465,17 +489,18 @@ footer.hint-bar p:last-child{margin-bottom:0;}
     <div class="preview-bar noprint">
       <div class="pb-top">
         <button class="btn btn-icon" type="button" id="railToggle" aria-expanded="true" aria-controls="railPanel">
-          <span class="bars" aria-hidden="true"></span>Pengaturan
+          <svg class="ico" aria-hidden="true"><use href="#i-menu"/></svg>Pengaturan
         </button>
         <div class="pb-title">
           <h2>Pratinjau cetak</h2>
           <p id="scaleInfo">Diskalakan agar muat di layar — proporsi lebar dan tinggi kertas tetap sesuai aslinya.</p>
         </div>
         <label class="chk" style="margin:0;"><input type="checkbox" id="trueSize"><span>Ukuran asli (100%)</span></label>
-        <label class="chk chk-test" style="margin:0;"><input type="checkbox" id="testMode"><span>Mode uji coba</span></label>
+        <label class="chk chk-test" style="margin:0;"><input type="checkbox" id="testMode"><span><svg class="ico" aria-hidden="true"><use href="#i-flask"/></svg>Mode uji coba</span></label>
       </div>
       <div class="test-banner" id="testBanner" hidden>
-        <strong>Mode uji coba aktif.</strong> Lembar diisi nama acak dan garis tepi tiap label — daftar tamu Anda tidak berubah. Matikan mode ini sebelum mencetak stiker asli.
+        <svg class="ico" aria-hidden="true"><use href="#i-flask"/></svg>
+        <div><strong>Mode uji coba aktif.</strong> Lembar diisi nama acak dan garis tepi tiap label — daftar tamu Anda tidak berubah. Matikan mode ini sebelum mencetak stiker asli.</div>
       </div>
       <div class="pb-actions">
         <div class="stat-row">
@@ -484,8 +509,8 @@ footer.hint-bar p:last-child{margin-bottom:0;}
           <div class="stat"><div class="v" id="statPages">0</div><div class="l">Lembar</div></div>
         </div>
         <div class="pb-buttons">
-          <button class="btn btn-primary" id="printBtn">Cetak stiker</button>
-          <button class="btn" id="downloadPdfBtn">Unduh PDF</button>
+          <button class="btn btn-primary" id="printBtn"><svg class="ico" aria-hidden="true"><use href="#i-printer"/></svg>Cetak stiker</button>
+          <button class="btn" id="downloadPdfBtn"><svg class="ico" aria-hidden="true"><use href="#i-download"/></svg>Unduh PDF</button>
         </div>
       </div>
     </div>
@@ -495,27 +520,27 @@ footer.hint-bar p:last-child{margin-bottom:0;}
     <section class="guest-panel noprint">
       <div class="panel-head">
         <div>
-          <h2>Daftar Tamu</h2>
+          <h2><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg>Daftar Tamu</h2>
           <p class="sub" id="tableCount">0 tamu</p>
         </div>
         <div class="panel-actions">
-          <button class="btn btn-accent" id="addRowBtn">+ Tambah tamu</button>
-          <button class="btn" id="clearAllBtn">Hapus semua</button>
+          <button class="btn btn-accent" id="addRowBtn"><svg class="ico" aria-hidden="true"><use href="#i-user-plus"/></svg>Tambah tamu</button>
+          <button class="btn" id="clearAllBtn"><svg class="ico" aria-hidden="true"><use href="#i-trash"/></svg>Hapus semua</button>
         </div>
       </div>
 
       <div class="import-bar">
         <label class="dropzone" id="dropzone">
           <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
-          <span class="t1">Pilih atau seret file Excel/CSV</span>
+          <span class="ic"><svg class="ico" aria-hidden="true"><use href="#i-upload"/></svg></span><span class="t1">Pilih atau seret file Excel/CSV</span>
           <span class="t2">.xlsx, .xls, atau .csv — ditambahkan ke daftar, tidak menimpa</span>
         </label>
         <div class="tpl-box">
           <div class="tt">Belum punya file?</div>
           <p>Unduh template, isi daftar tamu Anda, lalu impor kembali di sini.</p>
           <div class="tpl-btns">
-            <button class="btn btn-sm" id="tplXlsxBtn">Template Excel</button>
-            <button class="btn btn-sm" id="tplCsvBtn">Template CSV</button>
+            <button class="btn btn-sm" id="tplXlsxBtn"><svg class="ico" aria-hidden="true"><use href="#i-sheet"/></svg>Template Excel</button>
+            <button class="btn btn-sm" id="tplCsvBtn"><svg class="ico" aria-hidden="true"><use href="#i-filetext"/></svg>Template CSV</button>
           </div>
         </div>
       </div>
@@ -559,7 +584,7 @@ footer.hint-bar p:last-child{margin-bottom:0;}
         <div class="empty-state" id="emptyState">Belum ada tamu. Impor file Excel/CSV di atas, atau tambahkan tamu satu per satu dengan tombol di bawah.</div>
       </div>
       <div class="add-row-bar">
-        <button type="button" id="addRowBtn2">+ Tambah baris tamu</button>
+        <button type="button" id="addRowBtn2"><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg>Tambah baris tamu</button>
       </div>
     </section>
 
@@ -639,7 +664,7 @@ footer.hint-bar p:last-child{margin-bottom:0;}
   }
 
   function showFileChip(name, count){
-    $('fileChip').innerHTML = `<div class="file-chip"><span class="fname">${escapeHtml(name)} · ${count} baris ditambahkan</span><button id="removeFileBtn" title="Tutup">✕</button></div>`;
+    $('fileChip').innerHTML = `<div class="file-chip"><span class="fname">${escapeHtml(name)} · ${count} baris ditambahkan</span><button id="removeFileBtn" title="Tutup" aria-label="Tutup"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg></button></div>`;
     // Closing only dismisses the import panel; the rows it added stay in the list.
     $('removeFileBtn').addEventListener('click', ()=>{
       $('fileChip').innerHTML=''; $('columnMapWrap').style.display='none';
@@ -714,7 +739,7 @@ footer.hint-bar p:last-child{margin-bottom:0;}
         <td><input type="text" data-f="category" value="${escapeAttr(g.category)}" placeholder="—"></td>
         <td><input type="number" min="1" data-f="count" value="${g.count==null?'':g.count}" placeholder="—" style="text-align:center;"></td>
         <td><input type="text" data-f="session" value="${escapeAttr(g.session)}" placeholder="—"></td>
-        <td class="act"><button class="btn-ghost" data-del="${i}" title="Hapus">✕</button></td>
+        <td class="act"><button class="btn-ghost btn-del" data-del="${i}" title="Hapus tamu ini" aria-label="Hapus tamu ini"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg></button></td>
       </tr>`).join('');
     $('emptyState').style.display = guests.length ? 'none' : 'block';
     $('tableCount').textContent = guests.length + (guests.length===1?' tamu':' tamu');
@@ -728,8 +753,8 @@ footer.hint-bar p:last-child{margin-bottom:0;}
       });
     });
     tbody.querySelectorAll('[data-del]').forEach(btn=>{
-      btn.addEventListener('click', e=>{
-        guests.splice(+e.target.dataset.del,1);
+      btn.addEventListener('click', ()=>{
+        guests.splice(+btn.dataset.del,1);
         forgetImportedRange();
         renderTable(); render();
       });

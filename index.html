@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 :root{
   --paper:#FAFAFA; --ink:#18181B; --ink-soft:#71717A; --accent:#3D5AFE; --accent-soft:#6B82FF;
@@ -1102,110 +1103,64 @@ footer.hint-bar p:last-child{margin-bottom:0;}
       }`;
   }
 
-  // ---------- Download PDF: exact mm sizing, generated in-browser (bypasses OS print
-  // dialogs — needed because Android's native print pipeline ignores our @page CSS size
-  // and only offers a fixed list like A4/Letter). Vector text, not a rasterized image. ----------
-  // jsPDF takes coordinates in the document unit (mm here) but setFontSize is always
-  // in points, so font sizes — and only those — need converting.
-  const PT_PER_MM = 2.834645669; // 1in = 25.4mm = 72pt
-  function buildLayoutForPdf(){
-    return getLayoutConfig();
-  }
-  // A name/prefix/note that's wider than the label has nothing stopping it in jsPDF —
-  // unlike the CSS-rendered preview and print path (which clip it via overflow:hidden),
-  // doc.text() just draws past the label's edges and, for a cell near the sheet's own
-  // edge, past the page boundary too. Shrink the line to fit, then fall back to
-  // truncating with an ellipsis if it still doesn't fit at the smallest readable size.
-  function fitTextPdf(doc, text, sizeMm, style, maxWidthMm){
-    const MIN_RATIO = 0.55; // never shrink past this fraction of the label's intended size
-    doc.setFont('helvetica', style);
-    doc.setFontSize(sizeMm * PT_PER_MM);
-    let w = doc.getTextWidth(text);
-    if(w <= maxWidthMm) return {text, sizeMm};
-    const minSizeMm = sizeMm * MIN_RATIO;
-    sizeMm = Math.max(minSizeMm, sizeMm * (maxWidthMm / w));
-    doc.setFontSize(sizeMm * PT_PER_MM);
-    w = doc.getTextWidth(text);
-    if(w <= maxWidthMm) return {text, sizeMm};
-    // "…" (U+2026) silently vanishes when drawn with jsPDF's standard, non-embedded
-    // Helvetica — it isn't in that font's WinAnsi encoding. "..." is.
-    const ELLIPSIS = '...';
-    while(text.length > 1 && doc.getTextWidth(text + ELLIPSIS) > maxWidthMm){
-      text = text.slice(0, -1);
-    }
-    return {text: text + ELLIPSIS, sizeMm};
-  }
-  function drawStickerCellPdf(doc, g, cellX, cellY, labelW, labelH, opts, showBorder){
-    if(showBorder){
-      doc.setDrawColor(255,30,86); // bright pink-red, easy to see against white sticker paper
-      doc.setLineWidth(0.4);
-      doc.rect(cellX, cellY, labelW, labelH);
-    }
-    if(!g) return;
-    const {showPrefix, showNote, prefixText, defaultTitle, noteDefault} = opts;
-    const note = (g.count == null ? noteDefault : (g.count > 1 ? noteDefault : ''));
-    const nameLine = [defaultTitle, g.name].filter(Boolean).join(' ');
-    const lines = [];
-    if(showPrefix && prefixText) lines.push({text: prefixText, sizeMm: labelH*FONT_RATIO.prefix, style:'normal'});
-    lines.push({text: nameLine, sizeMm: labelH*FONT_RATIO.name, style:'bold'});
-    if(showNote && note) lines.push({text: note, sizeMm: labelH*FONT_RATIO.note, style:'normal'});
-
-    // matches the sticker's own 2mm CSS padding on each side
-    const maxWidthMm = Math.max(4, labelW - 4);
-    doc.setFont('helvetica');
-    lines.forEach(l=>{
-      const fit = fitTextPdf(doc, String(l.text), l.sizeMm, l.style, maxWidthMm);
-      l.text = fit.text; l.sizeMm = fit.sizeMm;
-    });
-
-    const lineHeightsMm = lines.map(l=>l.sizeMm*1.25);
-    const totalH = lineHeightsMm.reduce((a,b)=>a+b,0);
-    let y = cellY + (labelH - totalH)/2;
-    const cx = cellX + labelW/2;
-    lines.forEach((l,i)=>{
-      const lh = lineHeightsMm[i];
-      y += lh;
-      doc.setFontSize(l.sizeMm * PT_PER_MM);
-      doc.setFont('helvetica', l.style);
-      // baseline sits near the bottom of the line box, roughly 80% down
-      doc.text(l.text, cx, y - lh*0.22, {align:'center', baseline:'alphabetic'});
-    });
-  }
-  function generatePdf(listOverride, showBorders){
+  // ---------- Download PDF: what-you-see-is-what-you-get. Each .sheet in the live
+  // preview is screenshotted (html2canvas) exactly as rendered — same fonts, same
+  // wrapping/clipping, same test-mode borders — and dropped into a PDF page at the
+  // sheet's real mm size. This replaced an earlier version that redrew each line with
+  // jsPDF's own text/font APIs; keeping two renderers in sync was itself a source of
+  // bugs (see the font-size and long-name-overflow fixes in this file's history), and
+  // a screenshot can't drift from the preview since it *is* the preview. ----------
+  const PDF_DPI = 200; // ~print quality for label text without huge multi-page files
+  async function generatePdfFromPreview(showBorders){
     if(!window.jspdf || !window.jspdf.jsPDF){
       alert('Gagal memuat pustaka PDF. Periksa koneksi internet Anda, lalu coba lagi.');
       return;
     }
+    if(!window.html2canvas){
+      alert('Gagal memuat pustaka pratinjau PDF. Periksa koneksi internet Anda, lalu coba lagi.');
+      return;
+    }
+    const sheets = [...document.querySelectorAll('#stage .sheet')];
+    if(!sheets.length) return;
     const {jsPDF} = window.jspdf;
-    const L = buildLayoutForPdf();
-    const opts = {
-      showPrefix: $('showPrefix').checked,
-      showNote: $('showNote').checked,
-      prefixText: $('prefixText').value,
-      defaultTitle: $('defaultTitle').value,
-      noteDefault: $('noteDefault').value,
-    };
-    const list = listOverride || guests;
-    const pageCount = list.length ? Math.ceil(list.length / L.perPage) : 1;
-    const orientation = L.pageW >= L.pageH ? 'landscape' : 'portrait';
-    const doc = new jsPDF({unit:'mm', format:[L.pageW, L.pageH], orientation});
+    const {pageW, pageH} = getLayoutConfig();
+    const orientation = pageW >= pageH ? 'landscape' : 'portrait';
+    const doc = new jsPDF({unit:'mm', format:[pageW, pageH], orientation});
+    const targetPxWidth = (pageW/25.4)*PDF_DPI;
 
-    for(let p=0; p<pageCount; p++){
-      if(p>0) doc.addPage([L.pageW, L.pageH], orientation);
-      const pageGuests = list.slice(p*L.perPage, p*L.perPage+L.perPage);
-      for(let i=0;i<L.perPage;i++){
-        const col = i % L.cols, row = Math.floor(i / L.cols);
-        const cellX = L.marginLeft + col*L.hPitch;
-        const cellY = L.marginTop + row*L.vPitch;
-        drawStickerCellPdf(doc, pageGuests[i], cellX, cellY, L.labelW, L.labelH, opts, showBorders);
-      }
+    for(let i=0; i<sheets.length; i++){
+      const sheet = sheets[i];
+      const canvas = await html2canvas(sheet, {
+        backgroundColor:'#ffffff',
+        scale: targetPxWidth / sheet.offsetWidth, // normalizes to PDF_DPI regardless of the preview's current on-screen zoom
+        onclone: (clonedDoc, el) => {
+          // page furniture that belongs on screen, not on the printed sheet
+          el.style.boxShadow = 'none';
+          el.style.margin = '0';
+          const label = el.querySelector('.pagelabel');
+          if(label) label.remove();
+        },
+      });
+      if(i>0) doc.addPage([pageW, pageH], orientation);
+      doc.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, pageW, pageH);
     }
     doc.save(showBorders ? 'stiker-tamu-uji-coba.pdf' : 'stiker-tamu.pdf');
   }
-  $('downloadPdfBtn').addEventListener('click', ()=>{
+  $('downloadPdfBtn').addEventListener('click', async ()=>{
     const list = activeGuests(getLayoutConfig().perPage);
     if(!list.length){ alert('Belum ada tamu untuk dicetak. Impor file atau tambahkan tamu manual dulu.'); return; }
-    generatePdf(list, testMode);
+    const btn = $('downloadPdfBtn');
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = 'Membuat PDF…';
+    try{
+      await generatePdfFromPreview(testMode);
+    } catch(err){
+      alert('Gagal membuat PDF. Coba lagi.');
+    } finally{
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
   });
 
   // ---------- responsive: re-fit preview on viewport/orientation changes ----------

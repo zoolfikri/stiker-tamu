@@ -31,6 +31,10 @@
   --danger:#F87171;
 }
 *{box-sizing:border-box;}
+/* The UA's [hidden] rule is plain `display:none` at the lowest specificity, so any
+   author rule setting `display` silently defeats it. Elements toggled via the hidden
+   attribute here do set display, so state this once and let it win. */
+[hidden]{display:none !important;}
 .icon-sprite{display:none;}
 .ico{
   width:1.05em; height:1.05em; flex:0 0 auto; vertical-align:-.15em;
